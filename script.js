@@ -26,7 +26,6 @@ const referenceArtistCopy = document.querySelector("#referenceArtistCopy");
 const playbackTip = document.querySelector("#playbackTip");
 const setlistTools = document.querySelector("#setlistTools");
 const setVersion = document.querySelector("#setVersion");
-const versionButtons = document.querySelectorAll(".set-version__button");
 const exportSteps = document.querySelector("#exportSteps");
 const resultPanel = document.querySelector("#set-preview");
 const exportSimpleButton = document.querySelector("#exportSimpleButton");
@@ -57,7 +56,7 @@ let analyzedSourceTracks = [];
 let parseFormat = "auto";
 let hasPlaylistAnalysis = false;
 let draggedTrackIndex = null;
-let setVersionMode = "smoothest";
+const setVersionMode = "smoothest";
 
 try {
   const urlLang = new URLSearchParams(window.location.search).get("lang");
@@ -141,13 +140,12 @@ const copy = {
     energyCurveMiddle: "Peak",
     energyCurveEnd: "Outro",
     tracksLabel: "Tracks",
-    setVersionLabel: "Version",
-    versionSmoothest: "Smoothest",
-    versionExciting: "More exciting",
+    setVersionLabel: "Mix mode",
+    versionSmoothest: "Smooth Mix",
     betaNoteTitle: "Review before playing",
     betaNoteCopy: "Draft setlist. Adjust before playing.",
     setRationaleTitle: "Why this set",
-    setRationaleCopy: "Built from genre, BPM, vibe, and transition fit.",
+    setRationaleCopy: "Built for smooth AutoMix / Mix playback.",
     playbackTipTitle: "Try the DJ-style playback",
     playbackTipCopy: "Create a playlist with this order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.",
     appleAutoMixLink: "Apple Music AutoMix",
@@ -163,7 +161,7 @@ const copy = {
     moveUpLabel: "Move up",
     moveDownLabel: "Move down",
     apiFooterKicker: "Data sources",
-    apiFooterCopy: "BPM and key hints come from GetSongBPM. MusicBrainz and Last.fm help with track metadata and genre clues. Local reference sets guide energy flow and transition patterns. Results are estimates, so review before playing.",
+    apiFooterCopy: "BPM and key hints come from GetSongBPM. MusicBrainz and Last.fm help with track metadata and genre clues. Local reference sets guide energy flow and transition patterns. Mixory prioritizes smooth BPM, genre, energy, and Camelot-compatible transitions for AutoMix / Mix playback. Results are estimates, so review before playing.",
     exportHelp: "Simple for copying. Detailed includes BPM/key, energy, and risk.",
     exportSimpleButton: "Export Simple TXT",
     exportDetailedButton: "Export Detailed TXT",
@@ -257,13 +255,12 @@ const copy = {
     energyCurveMiddle: "峰值",
     energyCurveEnd: "Outro",
     tracksLabel: "曲目",
-    setVersionLabel: "版本",
-    versionSmoothest: "最顺滑",
-    versionExciting: "更有起伏",
+    setVersionLabel: "混音模式",
+    versionSmoothest: "顺滑模式",
     betaNoteTitle: "正式使用前请检查",
     betaNoteCopy: "这是草稿，播放前可再调整。",
     setRationaleTitle: "为什么这样生成",
-    setRationaleCopy: "基于曲风、BPM（节奏速度）、氛围和转场适配生成。",
+    setRationaleCopy: "优先服务于 AutoMix / Mix 的顺滑播放。",
     playbackTipTitle: "在音乐 App 里体验 DJ set 感",
     playbackTipCopy: "按这个顺序在 Apple Music 或 Spotify 新建播放列表，再开启 AutoMix / Mix 播放，会更接近 DJ set 的连续过渡。",
     appleAutoMixLink: "Apple Music AutoMix",
@@ -279,7 +276,7 @@ const copy = {
     moveUpLabel: "上移",
     moveDownLabel: "下移",
     apiFooterKicker: "数据来源",
-    apiFooterCopy: "BPM 和调性参考来自 GetSongBPM；MusicBrainz 和 Last.fm 辅助识别曲目信息与曲风线索；本地 reference set 用来参考能量走势和转场模式。结果是估算，正式播放前建议再检查。",
+    apiFooterCopy: "BPM 和调性参考来自 GetSongBPM；MusicBrainz 和 Last.fm 辅助识别曲目信息与曲风线索；本地 reference set 用来参考能量走势和转场模式。Mixory 会优先让 BPM、曲风、能量和 Camelot 相邻调性更适合 AutoMix / Mix 顺滑播放。结果是估算，正式播放前建议再检查。",
     exportHelp: "简洁版方便复制；详细版包含 BPM/调性、能量和风险。",
     exportSimpleButton: "导出简洁 TXT",
     exportDetailedButton: "导出详细 TXT",
@@ -1091,9 +1088,6 @@ function updateStaticCopy() {
     "energyCurveMiddle",
     "energyCurveEnd",
     "tracksLabel",
-    "setVersionLabel",
-    "versionSmoothest",
-    "versionExciting",
     "betaNoteTitle",
     "betaNoteCopy",
     "setRationaleTitle",
@@ -1791,7 +1785,6 @@ function makeTrackRows(data) {
 function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredTracks, mode = "smoothest") {
   const pool = sourcePool.slice(0, desiredTracks);
   if (pool.length <= 2) return pool;
-  if (mode === "exciting") return makeExcitingSequence(pool, data, energyValues);
 
   const remaining = [...pool].sort((a, b) => {
     const energySort = estimateTrackMixEnergy(a, data) - estimateTrackMixEnergy(b, data);
@@ -1803,26 +1796,6 @@ function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredT
 
   while (remaining.length) {
     const index = findBestNextTrackIndex(sequence.at(-1), remaining, data, energyValues[sequence.length] ?? 50, mode);
-    sequence.push(remaining.splice(index, 1)[0]);
-  }
-
-  return sequence;
-}
-
-function makeExcitingSequence(pool, data, energyValues) {
-  const remaining = [...pool].sort((a, b) => estimateTrackMixEnergy(a, data) - estimateTrackMixEnergy(b, data));
-  const sequence = [];
-  sequence.push(remaining.shift());
-
-  while (remaining.length) {
-    const index = findBestExcitingNextTrackIndex(
-      sequence.at(-1),
-      remaining,
-      data,
-      energyValues[sequence.length] ?? 70,
-      sequence.length,
-      pool.length
-    );
     sequence.push(remaining.splice(index, 1)[0]);
   }
 
@@ -1852,41 +1825,11 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
     const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
     const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
-    const weights = mode === "exciting"
-      ? { tempo: 1.15, key: 4.8, energy: 0.35, genre: 0.75 }
-      : { tempo: 1.8, key: 7, energy: 0.75, genre: 1 };
+    const weights = { tempo: 2.2, key: 3.1, energy: 1.05, genre: 1.45 };
     const score = tempoGap * weights.tempo * preference.tempoWeight
       + keyGap * weights.key * preference.keyWeight
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight;
-    if (score < bestScore) {
-      bestScore = score;
-      bestIndex = index;
-    }
-  });
-  return bestIndex;
-}
-
-function findBestExcitingNextTrackIndex(previous, candidates, data, targetEnergy, position, count) {
-  const preference = getPreferenceProfile(data);
-  let bestIndex = 0;
-  let bestScore = Infinity;
-  candidates.forEach((candidate, index) => {
-    const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
-    const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
-    const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
-    const candidateEnergy = estimateTrackMixEnergy(candidate, data);
-    const previousEnergy = estimateTrackMixEnergy(previous, data);
-    const energyGap = Math.abs(candidateEnergy - targetEnergy);
-    const isBuildSection = position < count * 0.68;
-    const movementBonus = isBuildSection
-      ? Math.max(0, candidateEnergy - previousEnergy) * 0.28
-      : Math.max(0, previousEnergy - candidateEnergy) * 0.18;
-    const score = energyGap * 1.45 * preference.energyWeight
-      + tempoGap * 0.85 * preference.tempoWeight
-      + keyGap * 3.5 * preference.keyWeight
-      + genrePenalty * 0.55 * preference.genreWeight
-      - movementBonus * preference.movementWeight;
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
@@ -1918,7 +1861,7 @@ function getTargetTempoForPosition(data, index, count) {
 function getCamelotDistance(left = "", right = "") {
   const a = parseCamelotKey(left);
   const b = parseCamelotKey(right);
-  if (!a || !b) return 1.5;
+  if (!a || !b) return 0.75;
   const wheelDistance = Math.min(Math.abs(a.number - b.number), 12 - Math.abs(a.number - b.number));
   const modeDistance = a.mode === b.mode ? 0 : 0.5;
   return wheelDistance + modeDistance;
@@ -1949,7 +1892,7 @@ function getTransitionRisk(previous, track) {
   const keyGap = getCamelotDistance(previous.camelotKey, track.camelotKey);
   const genrePenalty = getGenreCompatibilityPenalty(previous.genre, track.genre);
   const energyGap = Math.abs(Number(track.energy || 0) - Number(previous.energy || 0));
-  const score = tempoGap * 1.3 + keyGap * 6 + genrePenalty + energyGap * 0.4;
+  const score = tempoGap * 1.55 + keyGap * 3.2 + genrePenalty * 1.15 + energyGap * 0.48;
   if (score >= 34) return { key: "risky", score };
   if (score >= 20) return { key: "check", score };
   return { key: "smooth", score };
@@ -1966,12 +1909,6 @@ function updateTrackRisks() {
     ...track,
     risk: getTransitionRisk(rows[index - 1], track).key
   }));
-}
-
-function updateVersionButtons() {
-  versionButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.version === setVersionMode);
-  });
 }
 
 function getTrackTransitionText(track, data = currentData) {
@@ -2039,37 +1976,29 @@ function makeVersionEnergyValues(vibe, count, mode = "smoothest", data = current
     const middleLift = Math.sin(position * Math.PI) * preference.midLift;
     return Math.round(Math.max(8, Math.min(98, value + preference.energyBias + softIntro + softOutro + middleLift)));
   });
-  if (mode !== "exciting" || shapedValues.length < 4) return shapedValues;
-  return shapedValues.map((value, index) => {
-    const position = shapedValues.length === 1 ? 0 : index / (shapedValues.length - 1);
-    const lift = Math.sin(position * Math.PI) * 16;
-    const bounce = Math.sin(index * 2.15) * 5;
-    const earlyDip = index === 0 ? -8 : 0;
-    const outroDip = index === shapedValues.length - 1 ? -10 : 0;
-    return Math.round(Math.max(10, Math.min(98, value + lift + bounce + earlyDip + outroDip)));
-  });
+  return shapedValues;
 }
 
 function getPreferenceProfile(data = {}) {
   const text = normalizeNameForScore(`${data.dj || ""} ${data.notes || ""}`);
   const isSmooth = /smooth|soft|gentle|dreamy|warm|melodic|chill|coffee|focus|lo.?fi|nujabes|bonobo|ben bohmer|lane 8|four tet|black coffee|keinemusik|deep/.test(text);
-  const isExciting = /peak|club|rave|festival|workout|hard|high energy|exciting|punchy|fred again|peggy gou|chris lake|fisher|skrillex|knock2|mau p|charlotte/.test(text);
+  const isHighEnergyContext = /peak|club|rave|festival|workout|hard|high energy|punchy|fred again|peggy gou|chris lake|fisher|skrillex|knock2|mau p|charlotte/.test(text);
   const wantsSoftIntro = /soft intro|gentle intro|slow intro|warm intro|柔和|慢慢|开场/.test(text);
   const wantsPeak = /mid.?set peak|peak|高潮|推高|爆点/.test(text);
   const wantsDreamyOutro = /dreamy outro|soft outro|gentle ending|closing|outro|结尾|收尾/.test(text);
 
   return {
-    energyBias: (isExciting ? 7 : 0) + (isSmooth ? -6 : 0),
+    energyBias: (isHighEnergyContext ? 4 : 0) + (isSmooth ? -6 : 0),
     introBias: wantsSoftIntro || isSmooth ? -8 : 0,
     outroBias: wantsDreamyOutro || isSmooth ? -7 : 0,
-    midLift: wantsPeak || isExciting ? 7 : 0,
-    startTarget: wantsSoftIntro || isSmooth ? 18 : isExciting ? 34 : 25,
+    midLift: wantsPeak || isHighEnergyContext ? 5 : 0,
+    startTarget: wantsSoftIntro || isSmooth ? 18 : isHighEnergyContext ? 30 : 25,
     startTempoWeight: isSmooth ? 0.35 : 0.25,
-    tempoWeight: isSmooth ? 1.25 : isExciting ? 0.9 : 1,
-    keyWeight: isSmooth ? 1.25 : isExciting ? 0.9 : 1,
+    tempoWeight: isSmooth ? 1.2 : 1,
+    keyWeight: isSmooth ? 1.05 : 0.95,
     genreWeight: isSmooth ? 1.15 : 1,
-    energyWeight: isExciting ? 0.85 : isSmooth ? 1.15 : 1,
-    movementWeight: isExciting ? 1.25 : isSmooth ? 0.8 : 1
+    energyWeight: isSmooth ? 1.15 : 1,
+    movementWeight: isSmooth ? 0.8 : 1
   };
 }
 
@@ -2126,10 +2055,10 @@ function makeSetRationale(data = currentData) {
   const bpm = formatBpmRange(referencePattern?.bpmRange ?? profile.bpmRange);
 
   if (currentLang === "zh") {
-    return `基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM / 调性 / 曲风更接近，方便 AutoMix / Mix 顺滑过渡。`;
+    return `基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 AutoMix / Mix 更顺滑。`;
   }
 
-  return `Built around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, with neighboring BPM / key / genre kept closer for smoother AutoMix / Mix playback.`;
+  return `Built around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, genre texture, and energy continuity, with Camelot key as a soft harmonic guide for smoother AutoMix / Mix playback.`;
 }
 
 function makeReferenceArtistText() {
@@ -2197,7 +2126,6 @@ function renderTracklist() {
   if (setVersion) setVersion.hidden = !currentRows.length;
   if (exportSteps) exportSteps.hidden = !currentRows.length;
   setExportEnabled(Boolean(currentRows.length));
-  updateVersionButtons();
 }
 
 function renderCurrentSet(data = currentData) {
@@ -2235,7 +2163,6 @@ resetButton.addEventListener("click", () => {
   sourceTracks = [];
   analyzedSourceTracks = [];
   parseFormat = "auto";
-  setVersionMode = "smoothest";
   renderParsedPreview();
   updateInputGate();
   const defaultData = {
@@ -2268,20 +2195,11 @@ musicInput.addEventListener("input", () => {
   sourceTracks = [];
   analyzedSourceTracks = [];
   parseFormat = "auto";
-  setVersionMode = "smoothest";
   hasPlaylistAnalysis = false;
   renderParsedPreview();
   updateInputGate();
   updateSetLengthWarning();
   showEmptyOutput();
-});
-
-versionButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setVersionMode = button.dataset.version || "smoothest";
-    updateVersionButtons();
-    if (currentRows.length) renderSet(getFormData());
-  });
 });
 
 analyzeButton.addEventListener("click", async () => {
