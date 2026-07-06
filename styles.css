@@ -1343,9 +1343,14 @@ textarea:disabled {
 
 .track {
   display: grid;
-  grid-template-columns: 28px 44px minmax(0, 1fr) auto auto auto;
-  gap: 12px;
-  align-items: center;
+  grid-template-columns: 28px 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "drag number name order"
+    "drag number name meta"
+    "drag number transition risk";
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: start;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -1355,6 +1360,7 @@ textarea:disabled {
 
 .track::before {
   content: counter(tracks, decimal-leading-zero);
+  grid-area: number;
   display: grid;
   place-items: center;
   width: 38px;
@@ -1372,6 +1378,7 @@ textarea:disabled {
 }
 
 .track__drag {
+  grid-area: drag;
   display: grid;
   place-items: center;
   width: 28px;
@@ -1392,14 +1399,18 @@ textarea:disabled {
 }
 
 .track__name {
+  grid-area: name;
   min-width: 0;
+  max-width: 100%;
   cursor: text;
   user-select: text;
   -webkit-user-select: text;
 }
 
 .track__order {
+  grid-area: order;
   display: inline-flex;
+  justify-self: end;
   gap: 5px;
 }
 
@@ -1424,38 +1435,44 @@ textarea:disabled {
 .track__name strong,
 .track__name span {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
 }
 
 .track__name strong {
   margin-bottom: 4px;
   color: var(--ink);
-  font-size: 1.04rem;
-  line-height: 1.2;
+  font-size: clamp(0.94rem, 1vw, 1.04rem);
+  line-height: 1.22;
 }
 
 .track__name span,
 .track__meta {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: clamp(0.74rem, 0.82vw, 0.82rem);
   font-weight: 700;
 }
 
 .track__meta {
+  grid-area: meta;
+  justify-self: end;
   text-align: right;
   white-space: nowrap;
 }
 
 .track__transition {
-  grid-column: 3 / 7;
+  grid-area: transition;
   color: #515751;
   font-size: 0.8rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .track__risk {
+  grid-area: risk;
+  justify-self: end;
   border-radius: 999px;
   padding: 6px 8px;
   font-size: 0.7rem;
@@ -1481,12 +1498,19 @@ textarea:disabled {
 @media (max-width: 620px) {
   .track {
     grid-template-columns: 28px 38px minmax(0, 1fr);
+    grid-template-areas:
+      "drag number name"
+      "drag number order"
+      "drag number meta"
+      "drag number risk"
+      "drag number transition";
   }
 
   .track__order,
   .track__meta,
   .track__risk {
-    grid-column: 3;
+    grid-column: auto;
+    justify-self: start;
   }
 
   .track__meta {
@@ -1494,7 +1518,7 @@ textarea:disabled {
   }
 
   .track__transition {
-    grid-column: 3;
+    grid-column: auto;
   }
 }
 
@@ -1566,6 +1590,16 @@ textarea:disabled {
 
   .track {
     grid-template-columns: 40px 1fr;
+    grid-template-areas:
+      "number name"
+      "number order"
+      "number meta"
+      "number risk"
+      "number transition";
+  }
+
+  .track__drag {
+    display: none;
   }
 
   .chips label {
@@ -1579,11 +1613,34 @@ textarea:disabled {
   }
 
   .track__meta {
-    grid-column: 2;
     text-align: left;
   }
 
-  .track__transition {
-    grid-column: 2;
+  .track__order,
+  .track__meta,
+  .track__risk {
+    justify-self: start;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 620px) {
+  .track {
+    grid-template-columns: 28px 38px minmax(0, 1fr);
+    grid-template-areas:
+      "drag number name"
+      "drag number order"
+      "drag number meta"
+      "drag number risk"
+      "drag number transition";
+  }
+
+  .track__order,
+  .track__meta,
+  .track__risk {
+    justify-self: start;
+  }
+
+  .track__meta {
+    text-align: left;
   }
 }
