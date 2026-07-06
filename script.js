@@ -68,11 +68,11 @@ try {
 
 const copy = {
   en: {
-    heroEyebrow: "Tracklist to DJ-ready set",
-    heroCopy: "Turn playlists into smoother AutoMix-ready setlists.",
+    heroEyebrow: "Playlist to DJ-style flow",
+    heroCopy: "Mixory reshapes your playlist into a smoother mix flow for Apple Music AutoMix / Spotify Mix.",
     heroSource: "BPM and key data powered by GetSongBPM.",
     builderKicker: "Input",
-    builderTitle: "Build the set",
+    builderTitle: "Build the flow",
     musicInputKicker: "Add music",
     musicInputTitle: "Paste tracks from anywhere",
     musicInputLabel: "Paste tracks or upload TXT / CSV",
@@ -89,7 +89,7 @@ const copy = {
     sourceTrackCountLabel: "Original tracks",
     moodProfileLabel: "Mood profile",
     bpmRangeLabel: "BPM range",
-    recommendationLabel: "Best-fit recommendation",
+    recommendationLabel: "Best flow direction",
     recommendationLengthNote: "Length follows your source tracks.",
     parsedKicker: "Track check",
     parsedTitle: "Confirm title and artist",
@@ -104,13 +104,13 @@ const copy = {
     analyzeButton: "Analyze tracks",
     surpriseButton: "Surprise me",
     useRecommendationButton: "Use recommended settings",
-    lengthLabel: "Set length",
+    lengthLabel: "Flow length",
     genreLabel: "Main genre",
     vibeLegend: "Theme / vibe",
     djLabel: "Favorite DJ or mood reference",
     notesLabel: "Extra notes",
     notesPlaceholder: "Example: soft intro, mid-set peak, dreamy outro.",
-    generateButton: "Generate set",
+    generateButton: "Generate flow",
     resetButton: "Reset",
     outputKicker: "Output",
     outputEmptyTitle: "Add tracks first",
@@ -127,14 +127,14 @@ const copy = {
     outputServerRequiredCopy: "Use http://127.0.0.1:3000/ for analysis.",
     outputAnalyzeTimeoutTitle: "Analysis is taking longer",
     outputAnalyzeTimeoutCopy: "Metadata lookup took too long. Try again.",
-    outputGenerateTitle: "Generating DJ set",
-    outputGenerateCopy: "Building a smoother energy arc.",
-    outputGenerateSuccessTitle: "Setlist ready",
-    outputGenerateSuccessCopy: "Your setlist is ready.",
+    outputGenerateTitle: "Generating playlist flow",
+    outputGenerateCopy: "Mixory is shaping the order and energy arc.",
+    outputGenerateSuccessTitle: "Flow ready",
+    outputGenerateSuccessCopy: "Your Mixory flow is ready.",
     bpmLabel: "BPM arc",
     energyLabel: "Energy",
     energyCurveLabel: "Energy curve",
-    energyCurveTitle: "Set flow preview",
+    energyCurveTitle: "Flow preview",
     energyCurvePeak: "Peak --",
     energyCurveStart: "Intro",
     energyCurveMiddle: "Peak",
@@ -143,17 +143,17 @@ const copy = {
     setVersionLabel: "Mix mode",
     versionSmoothest: "Smooth Mix",
     betaNoteTitle: "Review before playing",
-    betaNoteCopy: "Draft setlist. Adjust before playing.",
-    setRationaleTitle: "Why this set",
-    setRationaleCopy: "Built for smooth AutoMix / Mix playback.",
+    betaNoteCopy: "Draft flow. Adjust before playing.",
+    setRationaleTitle: "Why this flow",
+    setRationaleCopy: "Mixory balances genre, BPM, vibe, and transition fit for Apple Music AutoMix / Spotify Mix.",
     playbackTipTitle: "Try the DJ-style playback",
-    playbackTipCopy: "Create a playlist with this order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.",
+    playbackTipCopy: "Create a playlist with this Mixory order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.",
     appleAutoMixLink: "Apple Music AutoMix",
     spotifyMixLink: "Spotify Mix",
     referenceArtistPrefix: "Reference",
     exportStepOne: "Copy this order.",
     exportStepTwo: "Make a playlist.",
-    exportStepThree: "Turn on AutoMix / Mix.",
+    exportStepThree: "Turn on Apple Music AutoMix / Spotify Mix.",
     riskSmooth: "Smooth",
     riskCheck: "Check",
     riskRisky: "Risky",
@@ -161,7 +161,7 @@ const copy = {
     moveUpLabel: "Move up",
     moveDownLabel: "Move down",
     apiFooterKicker: "Data sources",
-    apiFooterCopy: "BPM and key hints come from GetSongBPM. MusicBrainz and Last.fm help with track metadata and genre clues. Local reference sets guide energy flow and transition patterns. Mixory prioritizes smooth BPM, genre, energy, and Camelot-compatible transitions for AutoMix / Mix playback. Results are estimates, so review before playing.",
+    apiFooterCopy: "Mixory combines BPM/key hints from GetSongBPM, metadata clues from MusicBrainz and Last.fm, and local reference sets to shape smoother playlist flows. Results are estimates, so review before playing.",
     exportHelp: "Simple for copying. Detailed includes BPM/key, energy, and risk.",
     exportSimpleButton: "Export Simple TXT",
     exportDetailedButton: "Export Detailed TXT",
@@ -183,11 +183,11 @@ const copy = {
     }
   },
   zh: {
-    heroEyebrow: "把曲目列表变成 DJ-ready set",
-    heroCopy: "把歌单变成更适合 AutoMix 的 setlist。",
+    heroEyebrow: "Playlist to DJ-style flow",
+    heroCopy: "Mixory 会读懂你的歌单，把它整理成更适合 Apple Music AutoMix / Spotify Mix 的顺滑播放顺序。",
     heroSource: "BPM 和调性数据由 GetSongBPM 辅助提供。",
     builderKicker: "输入",
-    builderTitle: "生成你的 set",
+    builderTitle: "生成顺滑播放顺序",
     musicInputKicker: "添加音乐",
     musicInputTitle: "从任何地方粘贴曲目",
     musicInputLabel: "粘贴曲目或上传 TXT / CSV",
@@ -204,7 +204,7 @@ const copy = {
     sourceTrackCountLabel: "原歌单曲目",
     moodProfileLabel: "情绪画像",
     bpmRangeLabel: "BPM 范围（节奏速度）",
-    recommendationLabel: "最适合的 set 推荐",
+    recommendationLabel: "最适合的 flow 方向",
     recommendationLengthNote: "时长会按输入歌单估算。",
     parsedKicker: "曲目检查",
     parsedTitle: "确认歌名和艺人",
@@ -219,13 +219,13 @@ const copy = {
     analyzeButton: "分析曲目",
     surpriseButton: "给我惊喜",
     useRecommendationButton: "使用推荐设置",
-    lengthLabel: "Set 时长",
+    lengthLabel: "目标时长",
     genreLabel: "主曲风",
     vibeLegend: "主题 / 氛围",
     djLabel: "喜欢的 DJ 或情绪参考",
     notesLabel: "补充要求",
     notesPlaceholder: "例如：柔和开场，中段推高，结尾 dreamy。",
-    generateButton: "生成 set",
+    generateButton: "生成 flow",
     resetButton: "重置",
     outputKicker: "输出",
     outputEmptyTitle: "请先添加曲目",
@@ -235,21 +235,21 @@ const copy = {
     outputAnalyzeTitle: "正在分析曲目",
     outputAnalyzeCopy: "正在清洗曲目并查询 metadata。",
     outputAnalyzeSuccessTitle: "曲目分析完成",
-    outputAnalyzeSuccessCopy: "查看推荐，或生成 setlist。",
+    outputAnalyzeSuccessCopy: "查看推荐，或生成播放顺序。",
     outputAnalyzeErrorTitle: "没有识别到足够曲目",
     outputAnalyzeErrorCopy: "请至少粘贴三首可识别歌曲。",
     outputServerRequiredTitle: "请用本地网页地址打开",
     outputServerRequiredCopy: "请用 http://127.0.0.1:3000/ 打开。",
     outputAnalyzeTimeoutTitle: "分析时间有点久",
     outputAnalyzeTimeoutCopy: "查询时间过长，可以再试一次。",
-    outputGenerateTitle: "正在生成 DJ set",
-    outputGenerateCopy: "正在编排能量走势。",
-    outputGenerateSuccessTitle: "Setlist 已生成",
-    outputGenerateSuccessCopy: "Setlist 已生成。",
+    outputGenerateTitle: "正在生成 DJ-style flow",
+    outputGenerateCopy: "Mixory 正在编排顺序和能量走势。",
+    outputGenerateSuccessTitle: "播放顺序已生成",
+    outputGenerateSuccessCopy: "你的 Mixory flow 已生成。",
     bpmLabel: "BPM 走势",
     energyLabel: "能量",
     energyCurveLabel: "能量曲线",
-    energyCurveTitle: "Set 起伏预览",
+    energyCurveTitle: "Flow 起伏预览",
     energyCurvePeak: "峰值 --",
     energyCurveStart: "Intro",
     energyCurveMiddle: "峰值",
@@ -260,15 +260,15 @@ const copy = {
     betaNoteTitle: "正式使用前请检查",
     betaNoteCopy: "这是草稿，播放前可再调整。",
     setRationaleTitle: "为什么这样生成",
-    setRationaleCopy: "优先服务于 AutoMix / Mix 的顺滑播放。",
+    setRationaleCopy: "Mixory 会综合曲风、BPM、氛围和转场匹配，让顺序更适合 Apple Music AutoMix / Spotify Mix。",
     playbackTipTitle: "在音乐 App 里体验 DJ set 感",
-    playbackTipCopy: "按这个顺序在 Apple Music 或 Spotify 新建播放列表，再开启 AutoMix / Mix 播放，会更接近 DJ set 的连续过渡。",
+    playbackTipCopy: "按这个 Mixory 顺序在 Apple Music 或 Spotify 新建播放列表，再开启 Apple Music AutoMix / Spotify Mix，会更接近连续顺滑的 DJ-style 过渡。",
     appleAutoMixLink: "Apple Music AutoMix",
     spotifyMixLink: "Spotify Mix",
     referenceArtistPrefix: "参考",
     exportStepOne: "复制这个顺序。",
     exportStepTwo: "新建播放列表。",
-    exportStepThree: "开启 AutoMix / Mix。",
+    exportStepThree: "开启 Apple Music AutoMix / Spotify Mix。",
     riskSmooth: "顺滑",
     riskCheck: "可检查",
     riskRisky: "可能突兀",
@@ -276,7 +276,7 @@ const copy = {
     moveUpLabel: "上移",
     moveDownLabel: "下移",
     apiFooterKicker: "数据来源",
-    apiFooterCopy: "BPM 和调性参考来自 GetSongBPM；MusicBrainz 和 Last.fm 辅助识别曲目信息与曲风线索；本地 reference set 用来参考能量走势和转场模式。Mixory 会优先让 BPM、曲风、能量和 Camelot 相邻调性更适合 AutoMix / Mix 顺滑播放。结果是估算，正式播放前建议再检查。",
+    apiFooterCopy: "Mixory 会结合 GetSongBPM 的 BPM/调性参考、MusicBrainz 和 Last.fm 的曲目信息线索，以及本地 reference set 的能量走势，整理出更顺滑的 playlist flow。结果是估算，正式播放前建议再检查。",
     exportHelp: "简洁版方便复制；详细版包含 BPM/调性、能量和风险。",
     exportSimpleButton: "导出简洁 TXT",
     exportDetailedButton: "导出详细 TXT",
@@ -1039,7 +1039,7 @@ function formatLength(value) {
 
 function updateStaticCopy() {
   document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
-  document.title = currentLang === "zh" ? "Mixory - DJ 歌单优化器" : "Mixory - DJ Playlist Optimizer";
+  document.title = currentLang === "zh" ? "Mixory - 歌单顺滑播放顺序" : "Mixory - Playlist to DJ-style Flow";
 
   [
     "heroEyebrow",
@@ -1733,8 +1733,8 @@ function updateSetLengthWarning(data = getFormData()) {
   setLengthWarning.hidden = false;
   setLengthWarning.textContent =
     currentLang === "zh"
-      ? `这组歌估算约 ${availableMinutes} 分钟，少于你选择的 ${data.length} 分钟。Mixory 会优先避免重复歌曲，因此当前 setlist 可能会短一些；下一步可以增加“智能补歌”功能来填满时长。`
-      : `This source list is about ${availableMinutes} minutes, below your ${data.length}-minute target. Mixory will avoid repeating tracks, so the generated set may be shorter; smart fill-in recommendations can be added next.`;
+      ? `这组歌估算约 ${availableMinutes} 分钟，少于你选择的 ${data.length} 分钟。Mixory 会优先避免重复歌曲，因此当前 flow 可能会短一些；下一步可以增加“智能补歌”功能来填满时长。`
+      : `This source list is about ${availableMinutes} minutes, below your ${data.length}-minute target. Mixory will avoid repeating tracks, so the generated flow may be shorter; smart fill-in recommendations can be added next.`;
   if (sourceCount < trackGoal) {
     setLengthWarning.textContent +=
       currentLang === "zh"
@@ -2055,10 +2055,10 @@ function makeSetRationale(data = currentData) {
   const bpm = formatBpmRange(referencePattern?.bpmRange ?? profile.bpmRange);
 
   if (currentLang === "zh") {
-    return `基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 AutoMix / Mix 更顺滑。`;
+    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 Apple Music AutoMix / Spotify Mix 更顺滑。`;
   }
 
-  return `Built around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, genre texture, and energy continuity, with Camelot key as a soft harmonic guide for smoother AutoMix / Mix playback.`;
+  return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, genre texture, and energy continuity, with Camelot key as a soft guide for smoother Apple Music AutoMix / Spotify Mix playback.`;
 }
 
 function makeReferenceArtistText() {

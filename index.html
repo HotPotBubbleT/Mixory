@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mixory - DJ Playlist Optimizer</title>
+    <title>Mixory - Playlist to DJ-style Flow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
       <div class="theme-layer theme-layer--chill"></div>
     </div>
     <main class="shell">
-      <section class="hero" aria-label="DJ playlist optimizer">
+      <section class="hero" aria-label="Playlist to DJ-style flow optimizer">
         <div class="hero__shade"></div>
         <div class="topbar">
           <a class="brand" href="#" aria-label="Mixory home">
@@ -31,10 +31,10 @@
         </div>
 
         <div class="hero__content">
-          <p class="eyebrow" id="heroEyebrow">Tracklist to DJ-ready set</p>
+          <p class="eyebrow" id="heroEyebrow">Playlist to DJ-style flow</p>
           <h1>Mixory</h1>
           <p class="hero__copy" id="heroCopy">
-            Turn playlists into smoother AutoMix-ready setlists.
+            Mixory reshapes your playlist into a smoother mix flow for Apple Music AutoMix / Spotify Mix.
           </p>
           <p class="hero__source" id="heroSource">
             BPM and key data powered by <a href="https://getsongbpm.com/" target="_blank" rel="noreferrer">GetSongBPM</a>.
@@ -47,7 +47,7 @@
           <div class="panel-header">
             <div>
               <p class="section-kicker" id="builderKicker">Input</p>
-              <h2 id="builderTitle">Build the set</h2>
+              <h2 id="builderTitle">Build the flow</h2>
             </div>
             <span class="status-pill" id="statusPill">Ready</span>
           </div>
@@ -115,7 +115,7 @@
               </div>
             </div>
             <div class="recommendation">
-              <span id="recommendationLabel">Best-fit recommendation</span>
+                <span id="recommendationLabel">Best flow direction</span>
               <strong id="recommendedSet">Sunset melodic house set</strong>
               <p id="recommendationReason">
                 Warm melodic tracks with a gentle peak.
@@ -143,7 +143,7 @@
 
           <div class="control-grid">
             <label class="field">
-              <span id="lengthLabel">Set length</span>
+              <span id="lengthLabel">Flow length</span>
               <select id="setLength">
                 <option value="30">30 minutes</option>
                 <option value="45" selected>45 minutes</option>
@@ -211,7 +211,7 @@
           <div class="actions">
             <button class="button button--primary" type="button" id="surpriseButton">Surprise me</button>
             <button class="button button--secondary" type="button" id="useRecommendationButton">Use recommended settings</button>
-            <button class="button button--primary" type="submit" id="generateButton">Generate set</button>
+            <button class="button button--primary" type="submit" id="generateButton">Generate flow</button>
             <button class="button button--ghost" type="button" id="resetButton">Reset</button>
           </div>
         </form>
@@ -244,7 +244,7 @@
             <div class="energy-curve__header">
               <div>
                 <span id="energyCurveLabel">Energy curve</span>
-                <strong id="energyCurveTitle">Set flow preview</strong>
+                <strong id="energyCurveTitle">Flow preview</strong>
               </div>
               <span id="energyCurvePeak">--</span>
             </div>
@@ -276,18 +276,18 @@
 
           <div class="beta-note" id="betaNote" hidden>
             <strong id="betaNoteTitle">Review before playing</strong>
-            <p id="betaNoteCopy">Draft setlist. Adjust before playing.</p>
+            <p id="betaNoteCopy">Draft flow. Adjust before playing.</p>
           </div>
 
           <div class="set-rationale" id="setRationale" hidden>
-            <strong id="setRationaleTitle">Why this set</strong>
-            <p id="setRationaleCopy">Built from genre, BPM, vibe, and transition fit.</p>
+            <strong id="setRationaleTitle">Why this flow</strong>
+            <p id="setRationaleCopy">Mixory balances genre, BPM, vibe, and transition fit for Apple Music AutoMix / Spotify Mix.</p>
             <p class="set-rationale__reference" id="referenceArtistCopy">Reference: --</p>
           </div>
 
           <div class="playback-tip" id="playbackTip" hidden>
             <strong id="playbackTipTitle">Try the DJ-style playback</strong>
-            <p id="playbackTipCopy">Create a playlist with this order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.</p>
+            <p id="playbackTipCopy">Create a playlist with this Mixory order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.</p>
             <div class="playback-tip__links">
               <a id="appleAutoMixLink" href="https://support.apple.com/en-us/105067" target="_blank" rel="noreferrer">Apple Music AutoMix</a>
               <a id="spotifyMixLink" href="https://newsroom.spotify.com/2025-08-19/mix-your-favorite-playlists-seamlessly-by-adding-your-own-transitions/" target="_blank" rel="noreferrer">Spotify Mix</a>
@@ -304,7 +304,7 @@
             <div class="export-steps" id="exportSteps" hidden>
               <span id="exportStepOne">Copy this order.</span>
               <span id="exportStepTwo">Make a playlist.</span>
-              <span id="exportStepThree">Turn on AutoMix / Mix.</span>
+              <span id="exportStepThree">Turn on Apple Music AutoMix / Spotify Mix.</span>
             </div>
             <p class="export-bar__note" id="exportHelp">Simple for copying. Detailed includes BPM/key, energy, and risk.</p>
             <button class="button button--ghost" type="button" id="exportSimpleButton">Export Simple TXT</button>
@@ -317,12 +317,12 @@
         <div>
           <p class="section-kicker" id="apiFooterKicker">Data sources</p>
           <p id="apiFooterCopy">
-            BPM and key hints come from GetSongBPM. MusicBrainz and Last.fm help with track metadata and genre clues. Local reference sets guide energy flow and transition patterns. Results are estimates, so review before playing.
+            Mixory combines BPM/key hints from GetSongBPM, metadata clues from MusicBrainz and Last.fm, and local reference sets to shape smoother playlist flows. Results are estimates, so review before playing.
           </p>
         </div>
       </footer>
     </main>
 
-    <script src="script.js?v=mixory-20260706"></script>
+    <script src="script.js?v=mixory-20260706-platformcopy"></script>
   </body>
 </html>
