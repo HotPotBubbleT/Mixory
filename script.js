@@ -56,6 +56,7 @@ let analyzedSourceTracks = [];
 let parseFormat = "auto";
 let hasPlaylistAnalysis = false;
 let draggedTrackIndex = null;
+let uploadedPlaylistRawText = "";
 const setVersionMode = "smoothest";
 
 try {
@@ -1280,7 +1281,7 @@ function shouldUseBackend() {
 
 function getApiBaseUrl() {
   const host = window.location.hostname;
-  if (host === "127.0.0.1" || host === "localhost") return "";
+  if (host === "127.0.0.1" || host === "localhost") return window.location.origin;
   return productionApiBase;
 }
 
@@ -1288,6 +1289,7 @@ async function analyzePlaylistWithBackend() {
   if (!shouldUseBackend()) return false;
 
   const formData = getFormData();
+  const rawText = uploadedPlaylistRawText || musicInput.value.trim();
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 45000);
   const response = await fetch(`${getApiBaseUrl()}/api/tracks/analyze`, {
@@ -1298,7 +1300,7 @@ async function analyzePlaylistWithBackend() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      rawText: musicInput.value.trim(),
+      rawText,
       vibe: formData.vibe,
       genre: formData.genre,
       dj: formData.dj,
@@ -1656,7 +1658,29 @@ function getDisplayArtistScore(value = "") {
     "potatohead people",
     "redman",
     "kapok",
-    "common"
+    "common",
+    "sultan + shepard",
+    "sultan + shepherd",
+    "sultan & shepard",
+    "sultan & shepherd",
+    "sultan shepard",
+    "sultan shepherd",
+    "jerro",
+    "le youth",
+    "marsh",
+    "embrz",
+    "kx5",
+    "rufus du sol",
+    "rüfüs du sol",
+    "tinlicker",
+    "nora en pure",
+    "jan blomqvist",
+    "bob moses",
+    "ben bohmer",
+    "ben böhmer",
+    "yotto",
+    "luttrell",
+    "eli & fur"
   ];
   let score = 0;
   if (knownArtists.some((artist) => text === artist || text.includes(artist))) score += 5;
@@ -1807,7 +1831,10 @@ function findBestStartTrackIndex(tracks, data) {
   let bestIndex = 0;
   let bestScore = Infinity;
   tracks.forEach((track, index) => {
-    const score = Math.abs(estimateTrackMixEnergy(track, data) - preference.startTarget) + Math.abs((track.tempo || estimateBpmForTrack(data, index)) - getTargetTempoForPosition(data, 0, tracks.length)) * preference.startTempoWeight;
+    const djAffinity = getDjReferenceAffinity(track, data);
+    const score = Math.abs(estimateTrackMixEnergy(track, data) - preference.startTarget)
+      + Math.abs((track.tempo || estimateBpmForTrack(data, index)) - getTargetTempoForPosition(data, 0, tracks.length)) * preference.startTempoWeight
+      - djAffinity * preference.djReferenceWeight * 1.6;
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
@@ -1825,17 +1852,63 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
     const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
     const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
+    const djAffinity = getDjReferenceAffinity(candidate, data);
     const weights = { tempo: 2.2, key: 3.1, energy: 1.05, genre: 1.45 };
     const score = tempoGap * weights.tempo * preference.tempoWeight
       + keyGap * weights.key * preference.keyWeight
       + energyGap * weights.energy * preference.energyWeight
-      + genrePenalty * weights.genre * preference.genreWeight;
+      + genrePenalty * weights.genre * preference.genreWeight
+      - djAffinity * preference.djReferenceWeight;
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
     }
   });
   return bestIndex;
+}
+
+function getDjReferenceAffinity(track, data = {}) {
+  const reference = normalizeNameForScore(`${data.dj || ""} ${data.notes || ""}`);
+  if (!reference) return 0;
+
+  const artist = normalizeNameForScore(track.artist || "");
+  const title = normalizeNameForScore(track.title || "");
+  const genre = normalizeNameForScore(track.genre || data.genre || "");
+  const trackText = `${artist} ${title} ${genre}`;
+  let score = 0;
+
+  const referenceTokens = reference
+    .split(/[,;/]+|\band\b|\+|&/i)
+    .map((token) => normalizeNameForScore(token))
+    .filter((token) => token.length >= 3);
+  if (referenceTokens.some((token) => artist.includes(token) || token.includes(artist))) score += 0.75;
+
+  const profiles = [
+    {
+      refs: ["lane 8", "sultan", "shepard", "shepherd", "ben bohmer", "ben böhmer", "yotto", "marsh", "jerro", "le youth", "anjunadeep"],
+      genres: ["melodic house", "progressive house", "deep house"],
+      artists: ["lane 8", "sultan", "shepard", "ben bohmer", "ben böhmer", "yotto", "marsh", "jerro", "le youth", "tinlicker", "nora en pure", "luttrell", "eli & fur"]
+    },
+    {
+      refs: ["keinemusik", "black coffee", "rampa", "adam port", "mochakk"],
+      genres: ["afro house", "deep house", "organic house"],
+      artists: ["keinemusik", "black coffee", "rampa", "adam port", "mochakk"]
+    },
+    {
+      refs: ["fred again", "peggy gou", "four tet", "bicep", "bonobo"],
+      genres: ["indie dance", "house", "deep house", "uk garage"],
+      artists: ["fred again", "peggy gou", "four tet", "bicep", "bonobo", "caribou", "jungle"]
+    }
+  ];
+
+  profiles.forEach((profile) => {
+    const referenceMatches = profile.refs.some((ref) => reference.includes(ref));
+    if (!referenceMatches) return;
+    if (profile.artists.some((name) => trackText.includes(name))) score += 0.55;
+    if (profile.genres.some((name) => genre.includes(name))) score += 0.25;
+  });
+
+  return Math.max(0, Math.min(1, score));
 }
 
 function estimateTrackMixEnergy(track, data) {
@@ -1998,7 +2071,8 @@ function getPreferenceProfile(data = {}) {
     keyWeight: isSmooth ? 1.05 : 0.95,
     genreWeight: isSmooth ? 1.15 : 1,
     energyWeight: isSmooth ? 1.15 : 1,
-    movementWeight: isSmooth ? 0.8 : 1
+    movementWeight: isSmooth ? 0.8 : 1,
+    djReferenceWeight: 2.2
   };
 }
 
@@ -2163,6 +2237,7 @@ resetButton.addEventListener("click", () => {
   sourceTracks = [];
   analyzedSourceTracks = [];
   parseFormat = "auto";
+  uploadedPlaylistRawText = "";
   renderParsedPreview();
   updateInputGate();
   const defaultData = {
@@ -2195,6 +2270,7 @@ musicInput.addEventListener("input", () => {
   sourceTracks = [];
   analyzedSourceTracks = [];
   parseFormat = "auto";
+  uploadedPlaylistRawText = "";
   hasPlaylistAnalysis = false;
   renderParsedPreview();
   updateInputGate();
@@ -2365,6 +2441,7 @@ trackFile.addEventListener("change", async () => {
   const [file] = trackFile.files ?? [];
   if (!file) return;
   const fileText = await readPlaylistFileText(file);
+  uploadedPlaylistRawText = fileText;
   musicInput.value = convertStructuredPlaylistTextToTrackText(fileText) || normalizePlaylistText(fileText);
   backendInsightProfile = null;
   sourceTracks = [];
