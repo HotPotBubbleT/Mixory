@@ -44,7 +44,7 @@ const setLengthWarning = document.querySelector("#setLengthWarning");
 const parsedPreview = document.querySelector("#parsedPreview");
 const parsedTrackList = document.querySelector("#parsedTrackList");
 const formatButtons = document.querySelectorAll(".format-toggle__button");
-const productionApiBase = "https://mixory-api.onrender.com";
+const productionApiBase = "https://api.mixoryflow.com";
 
 let currentRows = [];
 let currentData = {};
