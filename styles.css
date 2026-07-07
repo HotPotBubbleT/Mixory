@@ -227,7 +227,7 @@ textarea {
 
 .hero {
   position: relative;
-  min-height: clamp(520px, 72vh, 760px);
+  min-height: clamp(500px, 64vh, 660px);
   overflow: visible;
 }
 
@@ -304,7 +304,7 @@ textarea {
 .hero__content {
   width: calc(100% - 40px);
   max-width: 1180px;
-  margin: 110px auto 0;
+  margin: clamp(36px, 6vh, 58px) auto 0;
 }
 
 .eyebrow,
@@ -358,7 +358,7 @@ h1 {
   gap: 22px;
   width: calc(100% - 40px);
   max-width: 1180px;
-  margin: -92px auto 64px;
+  margin: -34px auto 64px;
   align-items: start;
   position: relative;
   z-index: 2;
