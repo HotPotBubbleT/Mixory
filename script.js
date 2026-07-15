@@ -77,10 +77,13 @@ const copy = {
     musicInputKicker: "Add music",
     musicInputTitle: "Paste tracks from anywhere",
     musicInputLabel: "Paste tracks or upload TXT / CSV",
-    musicInputNote: "Supports common track formats, Exportify CSV, and Apple Music TXT. Up to 500 tracks.",
+    musicInputNote: "Supports common track formats, Exportify CSV, Apple Music TXT, and TuneMyMusic exports. Up to 500 tracks.",
     exportifyNote: "Spotify: export with Exportify, then upload CSV.",
     appleMusicNote: "Apple Music: File > Library > Export Playlist..., then upload TXT.",
+    tuneMyMusicNote: "YouTube Music: use TuneMyMusic to export TXT / CSV first.",
+    deviceTipNote: "Large playlists are easier to import on desktop. For short lists, pasting on mobile works well.",
     exportifyInputLink: "Open Exportify (Spotify)",
+    tuneMyMusicInputLink: "Open TuneMyMusic (YouTube Music or others)",
     fileUploadLabel: "Upload TXT / CSV",
     inputStatsLabel: "Detected tracks",
     insightKicker: "Music insight",
@@ -108,7 +111,12 @@ const copy = {
     lengthLabel: "Flow length",
     genreLabel: "Main genre",
     vibeLegend: "Theme / vibe",
+    advancedOptionsTitle: "More specific requests",
+    advancedOptionsCopy: "Optional: DJ reference, must-have tracks, or extra notes.",
     djLabel: "Favorite DJ or mood reference",
+    mustHaveLabel: "Must-have tracks",
+    mustHaveNote: "Mixory will try to include these tracks and place them where they transition best.",
+    mustHavePlaceholder: "Example: Lane 8 - Atlas\nSultan + Shepard - Assassin",
     notesLabel: "Extra notes",
     notesPlaceholder: "Example: soft intro, mid-set peak, dreamy outro.",
     generateButton: "Generate flow",
@@ -146,6 +154,7 @@ const copy = {
     betaNoteTitle: "Review before playing",
     betaNoteCopy: "Draft flow. Adjust before playing.",
     setRationaleTitle: "Why this flow",
+    setRationaleSummary: "BPM, key, vibe, and transition logic.",
     setRationaleCopy: "Mixory balances genre, BPM, vibe, and transition fit for Apple Music AutoMix / Spotify Mix.",
     playbackTipTitle: "Try the DJ-style playback",
     playbackTipCopy: "Create a playlist with this Mixory order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.",
@@ -185,17 +194,20 @@ const copy = {
   },
   zh: {
     heroEyebrow: "Playlist to DJ-style flow",
-    heroCopy: "Mixory 会读懂你的歌单，把它整理成更适合 Apple Music AutoMix / Spotify Mix 的顺滑播放顺序。",
+    heroCopy: "Mixory 会读懂你的歌单，把它整理成更适合 Apple Music AutoMix / Spotify Mix 的流畅自然播放顺序。",
     heroSource: "BPM 和调性数据由 GetSongBPM 辅助提供。",
     builderKicker: "输入",
-    builderTitle: "生成顺滑播放顺序",
+    builderTitle: "生成流畅自然的播放顺序",
     musicInputKicker: "添加音乐",
     musicInputTitle: "从任何地方粘贴曲目",
     musicInputLabel: "粘贴曲目或上传 TXT / CSV",
-    musicInputNote: "支持常见曲目格式、Exportify CSV、Apple Music TXT。最多分析 500 首。",
+    musicInputNote: "支持常见曲目格式、Exportify CSV、Apple Music TXT、TuneMyMusic 导出文件。最多分析 500 首。",
     exportifyNote: "Spotify：用 Exportify 导出 CSV 后上传。",
     appleMusicNote: "Apple Music：File > Library > Export Playlist... 导出 TXT。",
+    tuneMyMusicNote: "YouTube Music：先用 TuneMyMusic 导出 TXT / CSV，再上传。",
+    deviceTipNote: "歌曲很多时建议用电脑导入；歌曲较少时，手机直接粘贴也很方便。",
     exportifyInputLink: "打开 Exportify (Spotify)",
+    tuneMyMusicInputLink: "打开 TuneMyMusic (YouTube Music 或其他平台)",
     fileUploadLabel: "上传 TXT / CSV",
     inputStatsLabel: "识别到的曲目",
     insightKicker: "音乐分析",
@@ -223,7 +235,12 @@ const copy = {
     lengthLabel: "目标时长",
     genreLabel: "主曲风",
     vibeLegend: "主题 / 氛围",
+    advancedOptionsTitle: "更多具体要求",
+    advancedOptionsCopy: "可选：喜欢的 DJ、必选曲目、补充要求。",
     djLabel: "喜欢的 DJ 或情绪参考",
+    mustHaveLabel: "必选曲目",
+    mustHaveNote: "Mixory 会尽量保留这些歌，并放在更适合转场的位置。",
+    mustHavePlaceholder: "例如：Lane 8 - Atlas\nSultan + Shepard - Assassin",
     notesLabel: "补充要求",
     notesPlaceholder: "例如：柔和开场，中段推高，结尾 dreamy。",
     generateButton: "生成 flow",
@@ -257,27 +274,28 @@ const copy = {
     energyCurveEnd: "Outro",
     tracksLabel: "曲目",
     setVersionLabel: "混音模式",
-    versionSmoothest: "顺滑模式",
+    versionSmoothest: "流畅模式",
     betaNoteTitle: "正式使用前请检查",
     betaNoteCopy: "这是草稿，播放前可再调整。",
     setRationaleTitle: "为什么这样生成",
+    setRationaleSummary: "BPM、调性、氛围和转场逻辑。",
     setRationaleCopy: "Mixory 会综合曲风、BPM、氛围和转场匹配，让顺序更适合 Apple Music AutoMix / Spotify Mix。",
     playbackTipTitle: "在音乐 App 里体验 DJ set 感",
-    playbackTipCopy: "按这个 Mixory 顺序在 Apple Music 或 Spotify 新建播放列表，再开启 Apple Music AutoMix / Spotify Mix，会更接近连续顺滑的 DJ-style 过渡。",
+    playbackTipCopy: "按 Mixory 推荐的顺序在 Apple Music 或 Spotify 新建播放列表，再开启 Apple Music AutoMix / Spotify Mix，会更接近连续流畅的 DJ-style 过渡。",
     appleAutoMixLink: "Apple Music AutoMix",
     spotifyMixLink: "Spotify Mix",
     referenceArtistPrefix: "参考",
-    exportStepOne: "复制这个顺序。",
+    exportStepOne: "按此顺序整理歌曲。",
     exportStepTwo: "新建播放列表。",
     exportStepThree: "开启 Apple Music AutoMix / Spotify Mix。",
-    riskSmooth: "顺滑",
+    riskSmooth: "流畅",
     riskCheck: "可检查",
     riskRisky: "可能突兀",
     reorderHint: "想找单首歌，可直接复制歌名 / 艺人；想复制整份 set，可导出 Simple TXT。拖动曲目可微调顺序，曲线会同步更新。",
     moveUpLabel: "上移",
     moveDownLabel: "下移",
     apiFooterKicker: "数据来源",
-    apiFooterCopy: "Mixory 会结合 GetSongBPM 的 BPM/调性参考、MusicBrainz 和 Last.fm 的曲目信息线索，以及本地 reference set 的能量走势，整理出更顺滑的 playlist flow。结果是估算，正式播放前建议再检查。",
+    apiFooterCopy: "Mixory 会结合 GetSongBPM 的 BPM/调性参考、MusicBrainz 和 Last.fm 的曲目信息线索，以及本地 reference set 的能量走势，整理出更流畅自然的 playlist flow。结果是估算，正式播放前建议再检查。",
     exportHelp: "简洁版方便复制；详细版包含 BPM/调性、能量和风险。",
     exportSimpleButton: "导出简洁 TXT",
     exportDetailedButton: "导出详细 TXT",
@@ -979,6 +997,7 @@ function setFlowEnabled(isEnabled) {
     document.querySelector("#setLength"),
     document.querySelector("#genre"),
     document.querySelector("#djReference"),
+    document.querySelector("#mustHaveTracks"),
     document.querySelector("#notes"),
     document.querySelector("#generateButton"),
     surpriseButton,
@@ -1040,7 +1059,7 @@ function formatLength(value) {
 
 function updateStaticCopy() {
   document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
-  document.title = currentLang === "zh" ? "Mixory - 歌单顺滑播放顺序" : "Mixory - Playlist to DJ-style Flow";
+  document.title = currentLang === "zh" ? "Mixory - 歌单流畅播放顺序" : "Mixory - Playlist to DJ-style Flow";
 
   [
     "heroEyebrow",
@@ -1053,7 +1072,10 @@ function updateStaticCopy() {
     "musicInputNote",
     "exportifyNote",
     "appleMusicNote",
+    "tuneMyMusicNote",
+    "deviceTipNote",
     "exportifyInputLink",
+    "tuneMyMusicInputLink",
     "fileUploadLabel",
     "inputStatsLabel",
     "insightKicker",
@@ -1076,7 +1098,11 @@ function updateStaticCopy() {
     "lengthLabel",
     "genreLabel",
     "vibeLegend",
+    "advancedOptionsTitle",
+    "advancedOptionsCopy",
     "djLabel",
+    "mustHaveLabel",
+    "mustHaveNote",
     "notesLabel",
     "generateButton",
     "resetButton",
@@ -1092,6 +1118,7 @@ function updateStaticCopy() {
     "betaNoteTitle",
     "betaNoteCopy",
     "setRationaleTitle",
+    "setRationaleSummary",
     "playbackTipTitle",
     "playbackTipCopy",
     "appleAutoMixLink",
@@ -1115,6 +1142,7 @@ function updateStaticCopy() {
       ? "Fred again.. - adore u\nPeggy Gou - It Goes Like Nanana\nBicep - Glue"
       : "Fred again.. - adore u\nPeggy Gou - It Goes Like Nanana\nBicep - Glue";
   document.querySelector("#notes").placeholder = t("notesPlaceholder");
+  document.querySelector("#mustHaveTracks").placeholder = t("mustHavePlaceholder");
   renderHeroSource();
   document.querySelector("#setLength").querySelectorAll("option").forEach((option) => {
     option.textContent = formatLength(option.value);
@@ -1304,6 +1332,7 @@ async function analyzePlaylistWithBackend() {
       vibe: formData.vibe,
       genre: formData.genre,
       dj: formData.dj,
+      mustHave: formData.mustHave,
       notes: formData.notes
     })
   }).finally(() => window.clearTimeout(timeout));
@@ -1459,6 +1488,7 @@ function getFormData() {
     genre: document.querySelector("#genre").value,
     vibe,
     dj: document.querySelector("#djReference").value.trim(),
+    mustHave: document.querySelector("#mustHaveTracks").value.trim(),
     notes: document.querySelector("#notes").value.trim()
   };
 }
@@ -1581,7 +1611,8 @@ function getSourceTrackPool() {
         tempo: getTrackTempo(track, data, index),
         camelotKey: getTrackCamelotKey(track, index),
         genre: track.genreProfile?.genre || (Array.isArray(track.genres) ? track.genres[0] : "") || data.genre,
-        durationMinutes: getTrackDurationMinutes(track)
+        durationMinutes: getTrackDurationMinutes(track),
+        sourceIndex: index
       };
     });
   }
@@ -1592,7 +1623,8 @@ function getSourceTrackPool() {
     tempo: getTempoFromMeta(track[2]) || estimateBpmForTrack(data, index),
     camelotKey: getCamelotKeyFromMeta(track[2]) || estimateKeyForTrack(index),
     genre: data.genre,
-    durationMinutes: 4
+    durationMinutes: 4,
+    sourceIndex: index
   }));
 }
 
@@ -1784,7 +1816,8 @@ function makeTrackRows(data) {
     ? Math.min(getDesiredTrackCount(data.length), sourcePool.length)
     : getDesiredTrackCount(data.length);
   const energyValues = makeVersionEnergyValues(data.vibe, desiredTracks, setVersionMode, data);
-  const sequence = makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredTracks, setVersionMode);
+  const candidatePool = selectCandidateSourcePool(sourcePool, data, desiredTracks);
+  const sequence = makeTransitionFriendlySequence(candidatePool, data, energyValues, desiredTracks, setVersionMode);
 
   return Array.from({ length: desiredTracks }, (_, index) => {
     const source = sequence[index % sequence.length];
@@ -1804,6 +1837,63 @@ function makeTrackRows(data) {
       risk: null
     };
   });
+}
+
+function selectCandidateSourcePool(sourcePool, data, desiredTracks) {
+  if (!sourcePool.length || sourcePool.length <= desiredTracks) return sourcePool;
+  const mustHaveTracks = parseMustHaveTracks(data.mustHave);
+  if (!mustHaveTracks.length) return sourcePool.slice(0, desiredTracks);
+
+  const selected = [];
+  const selectedIndexes = new Set();
+  sourcePool.forEach((track, index) => {
+    if (getMustHaveAffinity(track, mustHaveTracks) < 0.58) return;
+    selected.push(track);
+    selectedIndexes.add(index);
+  });
+
+  sourcePool.forEach((track, index) => {
+    if (selected.length >= desiredTracks) return;
+    if (selectedIndexes.has(index)) return;
+    selected.push(track);
+  });
+
+  return selected.slice(0, desiredTracks);
+}
+
+function parseMustHaveTracks(value = "") {
+  return String(value)
+    .split(/\r?\n|;/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parsed = splitTitleArtist(line);
+      return {
+        raw: normalizeNameForScore(line),
+        title: normalizeNameForScore(parsed?.title || line),
+        artist: normalizeNameForScore(parsed?.artist || "")
+      };
+    })
+    .filter((item) => item.raw.length >= 3);
+}
+
+function getMustHaveAffinity(track, mustHaveTracks = parseMustHaveTracks(currentData.mustHave)) {
+  if (!mustHaveTracks.length) return 0;
+  const title = normalizeNameForScore(track.title || "");
+  const artist = normalizeNameForScore(track.artist || "");
+  const combined = `${title} ${artist}`.trim();
+  let best = 0;
+
+  mustHaveTracks.forEach((item) => {
+    let score = 0;
+    if (item.title && (title.includes(item.title) || item.title.includes(title))) score += 0.62;
+    if (item.artist && (artist.includes(item.artist) || item.artist.includes(artist))) score += 0.48;
+    if (item.raw && (combined.includes(item.raw) || item.raw.includes(combined))) score = Math.max(score, 0.92);
+    if (!item.artist && item.title && combined.includes(item.title)) score = Math.max(score, 0.7);
+    best = Math.max(best, score);
+  });
+
+  return Math.max(0, Math.min(1, best));
 }
 
 function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredTracks, mode = "smoothest") {
@@ -1832,9 +1922,11 @@ function findBestStartTrackIndex(tracks, data) {
   let bestScore = Infinity;
   tracks.forEach((track, index) => {
     const djAffinity = getDjReferenceAffinity(track, data);
+    const mustHaveAffinity = getMustHaveAffinity(track, parseMustHaveTracks(data.mustHave));
     const score = Math.abs(estimateTrackMixEnergy(track, data) - preference.startTarget)
       + Math.abs((track.tempo || estimateBpmForTrack(data, index)) - getTargetTempoForPosition(data, 0, tracks.length)) * preference.startTempoWeight
-      - djAffinity * preference.djReferenceWeight * 1.6;
+      - djAffinity * preference.djReferenceWeight * 1.6
+      - mustHaveAffinity * preference.mustHaveWeight;
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
@@ -1853,12 +1945,14 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
     const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
     const djAffinity = getDjReferenceAffinity(candidate, data);
+    const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
     const weights = { tempo: 2.2, key: 3.1, energy: 1.05, genre: 1.45 };
     const score = tempoGap * weights.tempo * preference.tempoWeight
       + keyGap * weights.key * preference.keyWeight
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight
-      - djAffinity * preference.djReferenceWeight;
+      - djAffinity * preference.djReferenceWeight
+      - mustHaveAffinity * preference.mustHaveWeight;
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
@@ -2072,7 +2166,8 @@ function getPreferenceProfile(data = {}) {
     genreWeight: isSmooth ? 1.15 : 1,
     energyWeight: isSmooth ? 1.15 : 1,
     movementWeight: isSmooth ? 0.8 : 1,
-    djReferenceWeight: 2.2
+    djReferenceWeight: 2.2,
+    mustHaveWeight: 3.6
   };
 }
 
@@ -2129,7 +2224,7 @@ function makeSetRationale(data = currentData) {
   const bpm = formatBpmRange(referencePattern?.bpmRange ?? profile.bpmRange);
 
   if (currentLang === "zh") {
-    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 Apple Music AutoMix / Spotify Mix 更顺滑。`;
+    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 Apple Music AutoMix / Spotify Mix 播放起来更自然。`;
   }
 
   return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, genre texture, and energy continuity, with Camelot key as a soft guide for smoother Apple Music AutoMix / Spotify Mix playback.`;
@@ -2245,6 +2340,7 @@ resetButton.addEventListener("click", () => {
     genre: "House",
     vibe: "Sunset",
     dj: "",
+    mustHave: "",
     notes: ""
   };
   renderInsight(defaultData);

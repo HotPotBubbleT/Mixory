@@ -71,7 +71,16 @@
               <small class="field-note field-note--link" id="appleMusicNote">
                 Apple Music: File > Library > Export Playlist..., then upload TXT.
               </small>
-              <a class="helper-link" id="exportifyInputLink" href="https://exportify.app/" target="_blank" rel="noreferrer">Open Exportify (Spotify)</a>
+              <small class="field-note field-note--link" id="tuneMyMusicNote">
+                YouTube Music: use TuneMyMusic to export TXT / CSV first.
+              </small>
+              <small class="field-note" id="deviceTipNote">
+                Large playlists are easier to import on desktop. For short lists, pasting on mobile works well.
+              </small>
+              <div class="helper-links" aria-label="Playlist export tools">
+                <a class="helper-link" id="exportifyInputLink" href="https://exportify.app/" target="_blank" rel="noreferrer">Open Exportify (Spotify)</a>
+                <a class="helper-link" id="tuneMyMusicInputLink" href="https://www.tunemymusic.com/" target="_blank" rel="noreferrer">Open TuneMyMusic (YouTube Music or others)</a>
+              </div>
             </label>
             <div class="import-tools">
               <label class="file-chip">
@@ -198,15 +207,30 @@
             <label><input type="radio" name="vibe" value="Deep focus" /><span>Deep focus</span></label>
           </fieldset>
 
-          <label class="field">
-            <span id="djLabel">Favorite DJ or mood reference</span>
-            <input id="djReference" type="text" placeholder="Keinemusik, Peggy Gou, Fred again.., Ben Bohmer..." />
-          </label>
+          <details class="advanced-options">
+            <summary>
+              <span id="advancedOptionsTitle">More specific requests</span>
+              <small id="advancedOptionsCopy">Optional: DJ reference, must-have tracks, or extra notes.</small>
+            </summary>
 
-          <label class="field">
-            <span id="notesLabel">Extra notes</span>
-            <textarea id="notes" rows="4" placeholder="Example: soft intro, mid-set peak, dreamy outro."></textarea>
-          </label>
+            <div class="advanced-options__content">
+              <label class="field">
+                <span id="djLabel">Favorite DJ or mood reference</span>
+                <input id="djReference" type="text" placeholder="Keinemusik, Peggy Gou, Fred again.., Ben Bohmer..." />
+              </label>
+
+              <label class="field">
+                <span id="mustHaveLabel">Must-have tracks</span>
+                <textarea id="mustHaveTracks" rows="3" placeholder="Example: Lane 8 - Atlas&#10;Sultan + Shepard - Assassin"></textarea>
+                <small class="field-note" id="mustHaveNote">Mixory will try to include these tracks and place them where they transition best.</small>
+              </label>
+
+              <label class="field">
+                <span id="notesLabel">Extra notes</span>
+                <textarea id="notes" rows="4" placeholder="Example: soft intro, mid-set peak, dreamy outro."></textarea>
+              </label>
+            </div>
+          </details>
 
           <div class="actions">
             <button class="button button--primary" type="button" id="surpriseButton">Surprise me</button>
@@ -279,11 +303,16 @@
             <p id="betaNoteCopy">Draft flow. Adjust before playing.</p>
           </div>
 
-          <div class="set-rationale" id="setRationale" hidden>
-            <strong id="setRationaleTitle">Why this flow</strong>
-            <p id="setRationaleCopy">Mixory balances genre, BPM, vibe, and transition fit for Apple Music AutoMix / Spotify Mix.</p>
-            <p class="set-rationale__reference" id="referenceArtistCopy">Reference: --</p>
-          </div>
+          <details class="set-rationale" id="setRationale" hidden>
+            <summary>
+              <span id="setRationaleTitle">Why this flow</span>
+              <small id="setRationaleSummary">BPM, key, vibe, and transition logic.</small>
+            </summary>
+            <div class="set-rationale__content">
+              <p id="setRationaleCopy">Mixory balances genre, BPM, vibe, and transition fit for Apple Music AutoMix / Spotify Mix.</p>
+              <p class="set-rationale__reference" id="referenceArtistCopy">Reference: --</p>
+            </div>
+          </details>
 
           <div class="playback-tip" id="playbackTip" hidden>
             <strong id="playbackTipTitle">Try the DJ-style playback</strong>
@@ -302,9 +331,18 @@
 
           <div class="export-bar" id="export">
             <div class="export-steps" id="exportSteps" hidden>
-              <span id="exportStepOne">Copy this order.</span>
-              <span id="exportStepTwo">Make a playlist.</span>
-              <span id="exportStepThree">Turn on Apple Music AutoMix / Spotify Mix.</span>
+              <span class="export-step">
+                <span class="export-step__number">1</span>
+                <span id="exportStepOne">Copy this order.</span>
+              </span>
+              <span class="export-step">
+                <span class="export-step__number">2</span>
+                <span id="exportStepTwo">Make a playlist.</span>
+              </span>
+              <span class="export-step">
+                <span class="export-step__number">3</span>
+                <span id="exportStepThree">Turn on Apple Music AutoMix / Spotify Mix.</span>
+              </span>
             </div>
             <p class="export-bar__note" id="exportHelp">Simple for copying. Detailed includes BPM/key, energy, and risk.</p>
             <button class="button button--ghost" type="button" id="exportSimpleButton">Export Simple TXT</button>
