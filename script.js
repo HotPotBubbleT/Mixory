@@ -25,6 +25,7 @@ const setRationaleCopy = document.querySelector("#setRationaleCopy");
 const referenceArtistCopy = document.querySelector("#referenceArtistCopy");
 const playbackTip = document.querySelector("#playbackTip");
 const setlistTools = document.querySelector("#setlistTools");
+const mustHaveFeedback = document.querySelector("#mustHaveFeedback");
 const setVersion = document.querySelector("#setVersion");
 const exportSteps = document.querySelector("#exportSteps");
 const resultPanel = document.querySelector("#set-preview");
@@ -167,6 +168,9 @@ const copy = {
     riskSmooth: "Smooth",
     riskCheck: "Check",
     riskRisky: "Risky",
+    estimatedMetaLabel: "Estimated",
+    mustHaveFound: "Must-have included: {found}/{total}",
+    mustHaveMissing: "Not found: {tracks}",
     reorderHint: "Copy a title / artist to search one track, or export Simple TXT for the full set. Drag tracks to adjust the order; the curve updates.",
     moveUpLabel: "Move up",
     moveDownLabel: "Move down",
@@ -291,6 +295,9 @@ const copy = {
     riskSmooth: "流畅",
     riskCheck: "可检查",
     riskRisky: "可能突兀",
+    estimatedMetaLabel: "估算",
+    mustHaveFound: "已加入必选曲目：{found}/{total}",
+    mustHaveMissing: "未找到：{tracks}",
     reorderHint: "想找单首歌，可直接复制歌名 / 艺人；想复制整份 set，可导出 Simple TXT。拖动曲目可微调顺序，曲线会同步更新。",
     moveUpLabel: "上移",
     moveDownLabel: "下移",
@@ -1604,14 +1611,21 @@ function getSourceTrackPool() {
   if (sourceTracks.length) {
     return sourceTracks.map((track, index) => {
       const displayTrack = normalizeDisplayTrack(track, index);
+      const knownTempo = Number(track.tempo) || getTempoFromMeta(track.meta);
+      const knownCamelotKey = normalizeCamelotKey(track.openKey || getCamelotKeyFromMeta(track.meta) || track.keyOf);
+      const tempo = knownTempo || estimateBpmForTrack(data, index);
+      const camelotKey = knownCamelotKey || estimateKeyForTrack(index);
+      const metadataEstimated = !knownTempo || !knownCamelotKey;
+      const baseMeta = track.meta || `${tempo} BPM / ${camelotKey}`;
       return {
         title: displayTrack.title,
         artist: displayTrack.artist,
-        meta: track.meta || `${estimateBpmForTrack(data, index)} BPM / ${estimateKeyForTrack(index)}`,
-        tempo: getTrackTempo(track, data, index),
-        camelotKey: getTrackCamelotKey(track, index),
+        meta: metadataEstimated ? appendEstimatedMetaLabel(baseMeta) : baseMeta,
+        tempo,
+        camelotKey,
         genre: track.genreProfile?.genre || (Array.isArray(track.genres) ? track.genres[0] : "") || data.genre,
         durationMinutes: getTrackDurationMinutes(track),
+        metadataEstimated,
         sourceIndex: index
       };
     });
@@ -1624,8 +1638,15 @@ function getSourceTrackPool() {
     camelotKey: getCamelotKeyFromMeta(track[2]) || estimateKeyForTrack(index),
     genre: data.genre,
     durationMinutes: 4,
+    metadataEstimated: false,
     sourceIndex: index
   }));
+}
+
+function appendEstimatedMetaLabel(meta = "") {
+  const label = t("estimatedMetaLabel");
+  const text = String(meta || "").trim();
+  return text.includes(label) ? text : `${text} · ${label}`;
 }
 
 function normalizeDisplayTrack(track, index) {
@@ -1834,6 +1855,7 @@ function makeTrackRows(data) {
       tempo: source.tempo,
       camelotKey: source.camelotKey,
       genre: source.genre,
+      metadataEstimated: source.metadataEstimated,
       risk: null
     };
   });
@@ -1869,6 +1891,7 @@ function parseMustHaveTracks(value = "") {
     .map((line) => {
       const parsed = splitTitleArtist(line);
       return {
+        label: line,
         raw: normalizeNameForScore(line),
         title: normalizeNameForScore(parsed?.title || line),
         artist: normalizeNameForScore(parsed?.artist || "")
@@ -1909,7 +1932,7 @@ function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredT
   sequence.push(remaining.splice(startIndex, 1)[0]);
 
   while (remaining.length) {
-    const index = findBestNextTrackIndex(sequence.at(-1), remaining, data, energyValues[sequence.length] ?? 50, mode);
+    const index = findBestNextTrackIndex(sequence.at(-1), remaining, data, energyValues[sequence.length] ?? 50, mode, sequence, pool);
     sequence.push(remaining.splice(index, 1)[0]);
   }
 
@@ -1935,22 +1958,25 @@ function findBestStartTrackIndex(tracks, data) {
   return bestIndex;
 }
 
-function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode = "smoothest") {
+function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode = "smoothest", sequence = [], poolContext = []) {
   const preference = getPreferenceProfile(data);
   let bestIndex = 0;
   let bestScore = Infinity;
   candidates.forEach((candidate, index) => {
     const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
     const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
+    const keyConfidence = previous.metadataEstimated || candidate.metadataEstimated ? 0.48 : 1;
     const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
     const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
     const djAffinity = getDjReferenceAffinity(candidate, data);
     const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
-    const weights = { tempo: 2.2, key: 3.1, energy: 1.05, genre: 1.45 };
+    const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
+    const weights = { tempo: 2.9, key: 1.55, energy: 1.35, genre: 1.75 };
     const score = tempoGap * weights.tempo * preference.tempoWeight
-      + keyGap * weights.key * preference.keyWeight
+      + keyGap * weights.key * preference.keyWeight * keyConfidence
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight
+      + artistRepeatPenalty * preference.artistRepeatWeight
       - djAffinity * preference.djReferenceWeight
       - mustHaveAffinity * preference.mustHaveWeight;
     if (score < bestScore) {
@@ -2005,6 +2031,51 @@ function getDjReferenceAffinity(track, data = {}) {
   return Math.max(0, Math.min(1, score));
 }
 
+function getArtistRepeatPenalty(sequence = [], candidate = {}, data = {}, poolContext = []) {
+  const candidateArtist = getPrimaryArtistName(candidate.artist);
+  if (!candidateArtist) return 0;
+
+  const recentTracks = sequence.slice(-3);
+  const samePrevious = isSamePrimaryArtist(sequence.at(-1)?.artist, candidate.artist);
+  const recentSameCount = recentTracks.filter((track) => isSamePrimaryArtist(track.artist, candidate.artist)).length;
+  if (!samePrevious && !recentSameCount) return 0;
+
+  let penalty = samePrevious ? 8 : 3;
+  if (recentSameCount >= 2) penalty += 6;
+
+  const artistShare = getArtistShare(candidateArtist, poolContext);
+  const isPreferred = isArtistPreferred(candidate.artist, data);
+  if (artistShare >= 0.25) penalty *= 0.45;
+  if (isPreferred) penalty *= 0.38;
+
+  return penalty;
+}
+
+function isSamePrimaryArtist(left = "", right = "") {
+  const a = getPrimaryArtistName(left);
+  const b = getPrimaryArtistName(right);
+  if (!a || !b) return false;
+  return a === b || (a.length >= 5 && b.includes(a)) || (b.length >= 5 && a.includes(b));
+}
+
+function getPrimaryArtistName(value = "") {
+  return normalizeNameForScore(value)
+    .split(/\s*(?:,|&|\+|\bx\b|\bfeat\.?\b|\bfeaturing\b|\bwith\b)\s*/i)
+    .find(Boolean) || "";
+}
+
+function getArtistShare(primaryArtist = "", poolContext = []) {
+  if (!primaryArtist || !poolContext.length) return 0;
+  const count = poolContext.filter((track) => isSamePrimaryArtist(track.artist, primaryArtist)).length;
+  return count / poolContext.length;
+}
+
+function isArtistPreferred(artist = "", data = {}) {
+  const preferredText = normalizeNameForScore(`${data.dj || ""} ${data.mustHave || ""} ${data.notes || ""}`);
+  const primaryArtist = getPrimaryArtistName(artist);
+  return Boolean(primaryArtist && preferredText.includes(primaryArtist));
+}
+
 function estimateTrackMixEnergy(track, data) {
   const tempo = Number(track.tempo) || estimateBpmForTrack(data, 0);
   const genre = normalizeNameForScore(track.genre || data.genre);
@@ -2043,23 +2114,51 @@ function getGenreCompatibilityPenalty(left = "", right = "") {
   const a = normalizeNameForScore(left);
   const b = normalizeNameForScore(right);
   if (!a || !b || a === b) return 0;
+  const leftFamily = getGenreFamily(a);
+  const rightFamily = getGenreFamily(b);
+  if (!leftFamily || !rightFamily) return 9;
+  if (leftFamily === rightFamily) return 2;
+
+  const pair = [leftFamily, rightFamily].sort().join("|");
+  const softPairs = new Set([
+    "deep-melodic|house-groove",
+    "chill-soul|house-groove",
+    "house-groove|pop-dance",
+    "club-rave|deep-melodic",
+    "club-rave|house-groove"
+  ]);
+  const mediumPairs = new Set([
+    "chill-soul|deep-melodic",
+    "bass|club-rave",
+    "bass|house-groove",
+    "deep-melodic|pop-dance"
+  ]);
+  if (softPairs.has(pair)) return 5;
+  if (mediumPairs.has(pair)) return 9;
+  return 16;
+}
+
+function getGenreFamily(value = "") {
+  const text = normalizeNameForScore(value).replace(/-/g, " ");
   const families = [
-    ["house", "deep house", "melodic house", "progressive house", "afro house", "disco", "funk", "garage"],
-    ["techno", "trance", "mainstage", "big room"],
-    ["bass", "dubstep", "bass house", "drum and bass", "dnb"],
-    ["lo fi", "lo-fi", "jazzy", "hip hop", "nu soul", "soul", "chill"]
+    { name: "deep-melodic", terms: ["melodic house", "progressive house", "organic house", "deep house", "afro house"] },
+    { name: "house-groove", terms: ["uk garage", "garage", "disco", "funk", "groove", "house"] },
+    { name: "club-rave", terms: ["techno", "trance", "mainstage", "big room", "rave"] },
+    { name: "bass", terms: ["bass house", "dubstep", "drum and bass", "dnb", "bass"] },
+    { name: "chill-soul", terms: ["lo fi", "lofi", "jazzy", "hip hop", "nu soul", "soul", "chill", "ambient"] },
+    { name: "pop-dance", terms: ["dance pop", "pop", "dance"] }
   ];
-  const sameFamily = families.some((family) => family.some((item) => a.includes(item)) && family.some((item) => b.includes(item)));
-  return sameFamily ? 3 : 14;
+  return families.find((family) => family.terms.some((term) => text.includes(term)))?.name || "";
 }
 
 function getTransitionRisk(previous, track) {
   if (!previous) return { key: "smooth", score: 0 };
   const tempoGap = Math.abs((track.tempo || 0) - (previous.tempo || track.tempo || 0));
   const keyGap = getCamelotDistance(previous.camelotKey, track.camelotKey);
+  const keyConfidence = previous.metadataEstimated || track.metadataEstimated ? 0.5 : 1;
   const genrePenalty = getGenreCompatibilityPenalty(previous.genre, track.genre);
   const energyGap = Math.abs(Number(track.energy || 0) - Number(previous.energy || 0));
-  const score = tempoGap * 1.55 + keyGap * 3.2 + genrePenalty * 1.15 + energyGap * 0.48;
+  const score = tempoGap * 1.8 + keyGap * 1.8 * keyConfidence + genrePenalty * 1.25 + energyGap * 0.56;
   if (score >= 34) return { key: "risky", score };
   if (score >= 20) return { key: "check", score };
   return { key: "smooth", score };
@@ -2076,6 +2175,28 @@ function updateTrackRisks() {
     ...track,
     risk: getTransitionRisk(rows[index - 1], track).key
   }));
+}
+
+function renderMustHaveFeedback() {
+  if (!mustHaveFeedback) return;
+  const mustHaveTracks = parseMustHaveTracks(currentData.mustHave);
+  if (!mustHaveTracks.length || !currentRows.length) {
+    mustHaveFeedback.hidden = true;
+    mustHaveFeedback.textContent = "";
+    return;
+  }
+
+  const found = mustHaveTracks.filter((item) => currentRows.some((track) => getMustHaveAffinity(track, [item]) >= 0.58));
+  const missing = mustHaveTracks.filter((item) => !found.includes(item));
+  const foundText = t("mustHaveFound")
+    .replace("{found}", found.length)
+    .replace("{total}", mustHaveTracks.length);
+  const missingText = missing.length
+    ? ` · ${t("mustHaveMissing").replace("{tracks}", missing.map((item) => item.label || item.raw).join(", "))}`
+    : "";
+
+  mustHaveFeedback.hidden = false;
+  mustHaveFeedback.textContent = `${foundText}${missingText}`;
 }
 
 function getTrackTransitionText(track, data = currentData) {
@@ -2161,13 +2282,14 @@ function getPreferenceProfile(data = {}) {
     midLift: wantsPeak || isHighEnergyContext ? 5 : 0,
     startTarget: wantsSoftIntro || isSmooth ? 18 : isHighEnergyContext ? 30 : 25,
     startTempoWeight: isSmooth ? 0.35 : 0.25,
-    tempoWeight: isSmooth ? 1.2 : 1,
-    keyWeight: isSmooth ? 1.05 : 0.95,
-    genreWeight: isSmooth ? 1.15 : 1,
-    energyWeight: isSmooth ? 1.15 : 1,
+    tempoWeight: isSmooth ? 1.36 : 1.2,
+    keyWeight: isSmooth ? 0.82 : 0.72,
+    genreWeight: isSmooth ? 1.28 : 1.12,
+    energyWeight: isSmooth ? 1.32 : 1.16,
     movementWeight: isSmooth ? 0.8 : 1,
-    djReferenceWeight: 2.2,
-    mustHaveWeight: 3.6
+    djReferenceWeight: 2.65,
+    mustHaveWeight: 3.8,
+    artistRepeatWeight: 1
   };
 }
 
@@ -2224,10 +2346,10 @@ function makeSetRationale(data = currentData) {
   const bpm = formatBpmRange(referencePattern?.bpmRange ?? profile.bpmRange);
 
   if (currentLang === "zh") {
-    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、曲风和能量更连贯，并用 Camelot 调性作为辅助，让 Apple Music AutoMix / Spotify Mix 播放起来更自然。`;
+    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、能量和曲风更连贯；Camelot 调性和相近 reference set 作为辅助，让 Apple Music AutoMix / Spotify Mix 播放起来更自然。`;
   }
 
-  return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, genre texture, and energy continuity, with Camelot key as a soft guide for smoother Apple Music AutoMix / Spotify Mix playback.`;
+  return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, energy, and genre continuity. Camelot key and similar reference-set patterns are used as soft guides for smoother Apple Music AutoMix / Spotify Mix playback.`;
 }
 
 function makeReferenceArtistText() {
@@ -2292,6 +2414,7 @@ function renderTracklist() {
   if (setRationale) setRationale.hidden = !currentRows.length;
   if (playbackTip) playbackTip.hidden = !currentRows.length;
   if (setlistTools) setlistTools.hidden = currentRows.length < 2;
+  renderMustHaveFeedback();
   if (setVersion) setVersion.hidden = !currentRows.length;
   if (exportSteps) exportSteps.hidden = !currentRows.length;
   setExportEnabled(Boolean(currentRows.length));

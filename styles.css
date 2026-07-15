@@ -1407,6 +1407,15 @@ textarea:disabled {
   padding: 10px 12px;
 }
 
+.must-have-feedback {
+  display: block;
+  margin-top: 6px;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.4;
+}
+
 .export-steps {
   display: flex;
   flex-wrap: wrap;
