@@ -1941,13 +1941,16 @@ function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredT
 
 function findBestStartTrackIndex(tracks, data) {
   const preference = getPreferenceProfile(data);
+  const referencePriority = getReferenceSmoothPriority();
   let bestIndex = 0;
   let bestScore = Infinity;
   tracks.forEach((track, index) => {
     const djAffinity = getDjReferenceAffinity(track, data);
     const mustHaveAffinity = getMustHaveAffinity(track, parseMustHaveTracks(data.mustHave));
+    const referenceFit = getReferenceStartFit(track, data);
     const score = Math.abs(estimateTrackMixEnergy(track, data) - preference.startTarget)
       + Math.abs((track.tempo || estimateBpmForTrack(data, index)) - getTargetTempoForPosition(data, 0, tracks.length)) * preference.startTempoWeight
+      - referenceFit * referencePriority.referencePattern * 6
       - djAffinity * preference.djReferenceWeight * 1.6
       - mustHaveAffinity * preference.mustHaveWeight;
     if (score < bestScore) {
@@ -1960,6 +1963,7 @@ function findBestStartTrackIndex(tracks, data) {
 
 function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode = "smoothest", sequence = [], poolContext = []) {
   const preference = getPreferenceProfile(data);
+  const referencePriority = getReferenceSmoothPriority();
   let bestIndex = 0;
   let bestScore = Infinity;
   candidates.forEach((candidate, index) => {
@@ -1971,11 +1975,18 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const djAffinity = getDjReferenceAffinity(candidate, data);
     const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
     const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
-    const weights = { tempo: 2.9, key: 1.55, energy: 1.35, genre: 1.75 };
+    const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
+    const weights = {
+      tempo: 2.35 + referencePriority.tempo * 1.6,
+      key: 1.05 + referencePriority.camelotKey * 2,
+      energy: 1.05 + referencePriority.energyCurve * 1.4,
+      genre: 1.25 + referencePriority.genreTexture * 1.9
+    };
     const score = tempoGap * weights.tempo * preference.tempoWeight
       + keyGap * weights.key * preference.keyWeight * keyConfidence
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight
+      + referencePatternPenalty * referencePriority.referencePattern
       + artistRepeatPenalty * preference.artistRepeatWeight
       - djAffinity * preference.djReferenceWeight
       - mustHaveAffinity * preference.mustHaveWeight;
@@ -2029,6 +2040,68 @@ function getDjReferenceAffinity(track, data = {}) {
   });
 
   return Math.max(0, Math.min(1, score));
+}
+
+function getReferenceSmoothPriority() {
+  const priority = getReferencePattern()?.smoothPriority ?? {};
+  return {
+    tempo: Number(priority.tempo) || 0.34,
+    genreTexture: Number(priority.genreTexture) || 0.23,
+    energyCurve: Number(priority.energyCurve) || 0.22,
+    camelotKey: Number(priority.camelotKey) || 0.16,
+    referencePattern: Number(priority.referencePattern) || 0.05
+  };
+}
+
+function getReferenceStartFit(track = {}, data = {}) {
+  const pattern = getReferencePattern();
+  if (!pattern) return 0;
+  const flow = normalizeNameForScore(pattern.flow || "");
+  const genre = normalizeNameForScore(track.genre || data.genre || "");
+  const energy = estimateTrackMixEnergy(track, data);
+  let score = 0;
+
+  if (/slow-rise|low-pressure/.test(flow) && energy <= 38) score += 1;
+  if (/deep-layered|club-groove|uk-garage/.test(flow) && energy >= 30 && energy <= 56) score += 0.75;
+  if (/festival-burst/.test(flow) && energy >= 48) score += 0.65;
+  if (/melodic|progressive|deep|organic|afro|garage|house|lo.?fi|jazz|soul/.test(`${flow} ${genre}`)) score += 0.35;
+
+  return Math.min(1, score);
+}
+
+function getReferencePatternPenalty(previous = {}, candidate = {}, data = {}, targetEnergy = 50) {
+  const pattern = getReferencePattern();
+  if (!pattern) return 0;
+  const flow = normalizeNameForScore(pattern.flow || "");
+  const transitionStyle = normalizeNameForScore(pattern.transitionStyle || "");
+  const candidateEnergy = estimateTrackMixEnergy(candidate, data);
+  const previousEnergy = estimateTrackMixEnergy(previous, data);
+  const energyMovement = candidateEnergy - previousEnergy;
+  let penalty = 0;
+
+  if (/slow-rise|melodic/.test(flow)) {
+    if (Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0)) > 8) penalty += 7;
+    if (energyMovement < -14) penalty += 6;
+  }
+
+  if (/low-pressure/.test(flow)) {
+    if (candidateEnergy > 62) penalty += 8;
+    if (Math.abs(energyMovement) > 18) penalty += 5;
+  }
+
+  if (/deep-layered|club-groove/.test(flow)) {
+    if (getGenreCompatibilityPenalty(previous.genre, candidate.genre) >= 12) penalty += 6;
+    if (Math.abs(energyMovement) > 24) penalty += 4;
+  }
+
+  if (/uk-garage/.test(flow) && !/garage|house|groove|dance|pop/.test(normalizeNameForScore(candidate.genre || ""))) {
+    penalty += 4;
+  }
+
+  if (/festival-burst/.test(flow) && candidateEnergy < targetEnergy - 24) penalty += 5;
+  if (/long blends|harmonic/.test(transitionStyle) && getCamelotDistance(previous.camelotKey, candidate.camelotKey) > 3) penalty += 3;
+
+  return penalty;
 }
 
 function getArtistRepeatPenalty(sequence = [], candidate = {}, data = {}, poolContext = []) {
