@@ -1066,6 +1066,7 @@ function formatLength(value) {
 
 function updateStaticCopy() {
   document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+  document.body.dataset.lang = currentLang;
   document.title = currentLang === "zh" ? "Mixory - 歌单流畅播放顺序" : "Mixory - Playlist to DJ-style Flow";
 
   [
@@ -2777,20 +2778,35 @@ async function readPlaylistFileText(file) {
 
 languageButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    currentLang = button.dataset.lang;
-    try {
-      window.localStorage.setItem("mixoryLang", currentLang);
-    } catch {
-      // Language switching should still work when storage is unavailable.
-    }
-    updateStaticCopy();
-    renderInsight(getFormData());
-    if (currentRows.length) {
-      renderCurrentSet(currentData);
-      showOutputSuccess();
-    } else {
-      showEmptyOutput();
-    }
+    const nextLang = button.dataset.lang;
+    if (nextLang === currentLang) return;
+
+    document.body.classList.add("is-language-switching");
+    languageButtons.forEach((item) => {
+      item.classList.toggle("is-active", item.dataset.lang === nextLang);
+    });
+    document.body.dataset.lang = nextLang;
+
+    window.setTimeout(() => {
+      currentLang = nextLang;
+      try {
+        window.localStorage.setItem("mixoryLang", currentLang);
+      } catch {
+        // Language switching should still work when storage is unavailable.
+      }
+      updateStaticCopy();
+      renderInsight(getFormData());
+      if (currentRows.length) {
+        renderCurrentSet(currentData);
+        showOutputSuccess();
+      } else {
+        showEmptyOutput();
+      }
+
+      window.setTimeout(() => {
+        document.body.classList.remove("is-language-switching");
+      }, 90);
+    }, 150);
   });
 });
 
