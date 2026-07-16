@@ -249,13 +249,13 @@ body.is-set-generated[data-theme="chill-eclectic"] .theme-layer--chill {
   align-items: center;
   justify-content: space-between;
   gap: 0;
-  width: clamp(220px, 35vw, 390px);
+  width: clamp(220px, 32vw, 360px);
   height: clamp(78px, 10vw, 118px);
   opacity: 0;
   mix-blend-mode: screen;
   filter: saturate(1.28);
   clip-path: inset(0 100% 0 0);
-  transform: translate(clamp(88px, 24vw, 230px), 8px) scaleX(0.96);
+  transform: translate(clamp(76px, 17vw, 162px), 8px) scaleX(0.96);
   animation: audioPulseFlow 2760ms cubic-bezier(0.18, 1, 0.3, 1) 0ms forwards;
 }
 
@@ -327,37 +327,75 @@ body.is-set-generated[data-theme="chill-eclectic"] .theme-layer--chill {
   0% {
     opacity: 0.24;
     clip-path: inset(0 96% 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), 10px) scaleX(0.92);
+    transform: translate(clamp(76px, 17vw, 162px), 10px) scaleX(0.92);
   }
 
   8% {
     opacity: 0.42;
     clip-path: inset(0 84% 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), 5px) scaleX(0.95);
+    transform: translate(clamp(76px, 17vw, 162px), 5px) scaleX(0.95);
   }
 
   18% {
     opacity: 0.5;
     clip-path: inset(0 74% 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), 2px) scaleX(0.97);
+    transform: translate(clamp(76px, 17vw, 162px), 2px) scaleX(0.97);
   }
 
   54% {
     opacity: 0.58;
     clip-path: inset(0 20% 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), -1px) scaleX(1.01);
+    transform: translate(clamp(76px, 17vw, 162px), -1px) scaleX(1.01);
   }
 
   72% {
     opacity: 0.24;
     clip-path: inset(0 0 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), -2px) scaleX(1.02);
+    transform: translate(clamp(76px, 17vw, 162px), -2px) scaleX(1.02);
   }
 
   100% {
     opacity: 0;
     clip-path: inset(0 0 0 0);
-    transform: translate(clamp(88px, 24vw, 230px), -10px) scaleX(1.04);
+    transform: translate(clamp(76px, 17vw, 162px), -10px) scaleX(1.04);
+  }
+}
+
+@keyframes audioPulseFlowMobile {
+  0% {
+    opacity: 0.24;
+    clip-path: inset(0 96% 0 0);
+    transform: translate(70px, 8px) scaleX(0.9);
+  }
+
+  8% {
+    opacity: 0.42;
+    clip-path: inset(0 84% 0 0);
+    transform: translate(70px, 4px) scaleX(0.94);
+  }
+
+  18% {
+    opacity: 0.5;
+    clip-path: inset(0 74% 0 0);
+    transform: translate(70px, 1px) scaleX(0.97);
+  }
+
+  54% {
+    opacity: 0.56;
+    clip-path: inset(0 20% 0 0);
+    transform: translate(70px, -1px) scaleX(1);
+  }
+
+  72% {
+    opacity: 0.22;
+    clip-path: inset(0 0 0 0);
+    transform: translate(70px, -2px) scaleX(1.02);
+  }
+
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+    transform: translate(70px, -8px) scaleX(1.03);
   }
 }
 
@@ -2400,9 +2438,18 @@ textarea:disabled {
 
   .logo-word {
     width: min(100%, 306px);
-    margin-inline: auto;
-    transform-origin: center center;
+    margin-inline: 0;
+    transform-origin: left center;
     animation-name: logoSettleMobile;
+  }
+
+  .audio-pulse {
+    left: 28px;
+    top: clamp(315px, 36vh, 365px);
+    width: min(250px, calc(100vw - 96px));
+    height: 82px;
+    transform: translate(70px, 0) scaleX(0.94);
+    animation-name: audioPulseFlowMobile;
   }
 
   .hero__copy {
