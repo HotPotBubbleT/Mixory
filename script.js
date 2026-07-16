@@ -1604,33 +1604,37 @@ function renderParsedPreview() {
     return;
   }
 
-  parsedPreview.hidden = false;
   const reviewRows = sourceTracks
     .map((track, index) => ({ track, index, confidence: getParseConfidence(track) }))
     .filter((item) => item.confidence === "low");
+
+  if (!reviewRows.length) {
+    parsedPreview.hidden = true;
+    parsedTrackList.innerHTML = "";
+    updateFormatButtons();
+    return;
+  }
+
+  parsedPreview.hidden = false;
   const parsedCopy = document.querySelector("#parsedCopy");
   if (parsedCopy) {
-    parsedCopy.textContent = reviewRows.length
-      ? t("parsedNeedsReview").replace("{count}", reviewRows.length)
-      : t("parsedAllClear").replace("{count}", sourceTracks.length);
+    parsedCopy.textContent = t("parsedNeedsReview").replace("{count}", reviewRows.length);
   }
-  parsedTrackList.innerHTML = reviewRows.length
-    ? reviewRows
-      .map(({ track, index, confidence }) => {
-        return `
-          <div class="parsed-row parsed-row--${confidence}">
-            <span class="parsed-row__index">${String(index + 1).padStart(2, "0")}</span>
-            <div class="parsed-row__main">
-              <strong>${escapeHtml(track.title || "--")}</strong>
-              <span>${escapeHtml(track.artist || (currentLang === "zh" ? "未知艺人" : "Unknown artist"))}</span>
-            </div>
-            <span class="parsed-row__confidence">${escapeHtml(t("confidenceLow"))}</span>
-            <button class="parsed-row__swap" type="button" data-swap-index="${index}">${escapeHtml(t("swapButton"))}</button>
+  parsedTrackList.innerHTML = reviewRows
+    .map(({ track, index, confidence }) => {
+      return `
+        <div class="parsed-row parsed-row--${confidence}">
+          <span class="parsed-row__index">${String(index + 1).padStart(2, "0")}</span>
+          <div class="parsed-row__main">
+            <strong>${escapeHtml(track.title || "--")}</strong>
+            <span>${escapeHtml(track.artist || (currentLang === "zh" ? "未知艺人" : "Unknown artist"))}</span>
           </div>
-        `;
-      })
-      .join("")
-    : "";
+          <span class="parsed-row__confidence">${escapeHtml(t("confidenceLow"))}</span>
+          <button class="parsed-row__swap" type="button" data-swap-index="${index}">${escapeHtml(t("swapButton"))}</button>
+        </div>
+      `;
+    })
+    .join("");
   updateFormatButtons();
 }
 
