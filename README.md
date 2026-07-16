@@ -34,19 +34,3 @@ Results are still estimates. BPM, key, and genre data should be reviewed before 
 Mixory is an MVP. It does not require Spotify login and does not directly read private Spotify or Apple Music playlists. Users export or paste their tracklists first, then Mixory analyzes the text data.
 
 The backend currently keeps placeholders for future Songstats or Beatport-style enrichment. Those layers can make DJ-specific metadata more reliable later.
-
-## Development
-
-The frontend lives in `outputs/`. The backend is a no-dependency Node server in `server.mjs`.
-
-To run locally:
-
-```bash
-npm start
-```
-
-Then open:
-
-```text
-http://127.0.0.1:3000
-```
