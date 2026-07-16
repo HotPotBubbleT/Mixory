@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=mixory-20260716-language-toggle-fix" />
+    <link rel="stylesheet" href="styles.css?v=mixory-20260716-flow-guide-hero" />
   </head>
   <body>
     <div class="page-background" aria-hidden="true">
@@ -66,6 +66,11 @@
           <p class="hero__source" id="heroSource">
             BPM and key data powered by <a href="https://getsongbpm.com/" target="_blank" rel="noreferrer">GetSongBPM</a>.
           </p>
+          <div class="mini-flow" aria-label="Mixory flow steps">
+            <span id="miniStepOne">Add tracks</span>
+            <span id="miniStepTwo">Analyze</span>
+            <span id="miniStepThree">Generate flow</span>
+          </div>
         </div>
       </section>
 
@@ -373,6 +378,7 @@
               </span>
             </div>
             <p class="export-bar__note" id="exportHelp">Simple for copying. Detailed includes BPM/key, energy, and risk.</p>
+            <button class="button button--primary" type="button" id="copySimpleButton">Copy Simple List</button>
             <button class="button button--ghost" type="button" id="exportSimpleButton">Export Simple TXT</button>
             <button class="button button--secondary" type="button" id="exportDetailedButton">Export Detailed TXT</button>
           </div>
@@ -389,6 +395,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=mixory-20260716-language-toggle-fix"></script>
+    <script src="script.js?v=mixory-20260716-flow-guide-hero"></script>
   </body>
 </html>

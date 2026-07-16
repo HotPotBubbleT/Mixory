@@ -355,6 +355,7 @@ textarea {
   .hero__content .eyebrow,
   .hero__copy,
   .hero__source,
+  .hero__content .mini-flow,
   .workspace,
   .app-footer {
     opacity: 1;
@@ -509,7 +510,8 @@ body[data-lang="zh"] .language-toggle::before {
 
 .hero__content .eyebrow,
 .hero__copy,
-.hero__source {
+.hero__source,
+.hero__content .mini-flow {
   opacity: 0;
   transform: translateY(12px);
   animation: heroTextReveal 900ms ease-out forwards;
@@ -525,6 +527,10 @@ body[data-lang="zh"] .language-toggle::before {
 
 .hero__source {
   animation-delay: 3500ms;
+}
+
+.hero__content .mini-flow {
+  animation-delay: 3660ms;
 }
 
 .eyebrow,
@@ -764,6 +770,10 @@ h1 {
   text-underline-offset: 3px;
 }
 
+.hero__source + .mini-flow {
+  margin-top: 14px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(500px, 1fr) minmax(300px, 0.72fr);
@@ -897,6 +907,39 @@ h1 {
 .import-card__badge {
   background: rgba(88, 200, 132, 0.14);
   color: #217044;
+}
+
+.mini-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 8px 0 10px;
+}
+
+.mini-flow span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.22);
+}
+
+.mini-flow span:not(:last-child)::after {
+  content: "->";
+  position: absolute;
+  left: calc(100% + 5px);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 .import-tools {
@@ -2086,6 +2129,14 @@ textarea:disabled {
 }
 
 @media (max-width: 620px) {
+  .mini-flow {
+    gap: 7px;
+  }
+
+  .mini-flow span:not(:last-child)::after {
+    display: none;
+  }
+
   .track {
     grid-template-columns: 28px 38px minmax(0, 1fr);
     grid-template-areas:

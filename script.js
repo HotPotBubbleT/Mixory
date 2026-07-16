@@ -29,6 +29,7 @@ const mustHaveFeedback = document.querySelector("#mustHaveFeedback");
 const setVersion = document.querySelector("#setVersion");
 const exportSteps = document.querySelector("#exportSteps");
 const resultPanel = document.querySelector("#set-preview");
+const copySimpleButton = document.querySelector("#copySimpleButton");
 const exportSimpleButton = document.querySelector("#exportSimpleButton");
 const exportDetailedButton = document.querySelector("#exportDetailedButton");
 const languageToggle = document.querySelector(".language-toggle");
@@ -79,6 +80,9 @@ const copy = {
     musicInputKicker: "Add music",
     musicInputTitle: "Paste tracks from anywhere",
     musicInputLabel: "Paste tracks or upload TXT / CSV",
+    miniStepOne: "Add tracks",
+    miniStepTwo: "Analyze",
+    miniStepThree: "Generate flow",
     musicInputNote: "Supports common track formats, Exportify CSV, Apple Music TXT, and TuneMyMusic exports. Up to 500 tracks.",
     exportifyNote: "Spotify: export with Exportify, then upload CSV.",
     appleMusicNote: "Apple Music: File > Library > Export Playlist..., then upload TXT.",
@@ -177,7 +181,9 @@ const copy = {
     moveDownLabel: "Move down",
     apiFooterKicker: "Data sources",
     apiFooterCopy: "Mixory combines BPM/key hints from GetSongBPM, metadata clues from MusicBrainz and Last.fm, and local reference sets to shape smoother playlist flows. Results are estimates, so review before playing.",
-    exportHelp: "Simple for copying. Detailed includes BPM/key, energy, and risk.",
+    exportHelp: "Copy Simple List for quick search, or export TXT for later.",
+    copySimpleButton: "Copy Simple List",
+    copySimpleButtonCopied: "Copied",
     exportSimpleButton: "Export Simple TXT",
     exportDetailedButton: "Export Detailed TXT",
     transitionPrefix: "Transition",
@@ -206,6 +212,9 @@ const copy = {
     musicInputKicker: "添加音乐",
     musicInputTitle: "从任何地方粘贴曲目",
     musicInputLabel: "粘贴曲目或上传 TXT / CSV",
+    miniStepOne: "添加曲目",
+    miniStepTwo: "分析",
+    miniStepThree: "生成 flow",
     musicInputNote: "支持常见曲目格式、Exportify CSV、Apple Music TXT、TuneMyMusic 导出文件。最多分析 500 首。",
     exportifyNote: "Spotify：用 Exportify 导出 CSV 后上传。",
     appleMusicNote: "Apple Music：File > Library > Export Playlist... 导出 TXT。",
@@ -304,7 +313,9 @@ const copy = {
     moveDownLabel: "下移",
     apiFooterKicker: "数据来源",
     apiFooterCopy: "Mixory 会结合 GetSongBPM 的 BPM/调性参考、MusicBrainz 和 Last.fm 的曲目信息线索，以及本地 reference set 的能量走势，整理出更流畅自然的 playlist flow。结果是估算，正式播放前建议再检查。",
-    exportHelp: "简洁版方便复制；详细版包含 BPM/调性、能量和风险。",
+    exportHelp: "复制简洁列表方便搜索并新建歌单；也可以导出 TXT 留着之后用。",
+    copySimpleButton: "复制简洁列表",
+    copySimpleButtonCopied: "已复制",
     exportSimpleButton: "导出简洁 TXT",
     exportDetailedButton: "导出详细 TXT",
     transitionPrefix: "转场",
@@ -1025,7 +1036,7 @@ function setFlowEnabled(isEnabled) {
 }
 
 function setExportEnabled(isEnabled) {
-  [exportSimpleButton, exportDetailedButton].forEach((control) => {
+  [copySimpleButton, exportSimpleButton, exportDetailedButton].forEach((control) => {
     control.disabled = !isEnabled;
   });
 }
@@ -1086,6 +1097,9 @@ function updateStaticCopy() {
     "musicInputKicker",
     "musicInputTitle",
     "musicInputLabel",
+    "miniStepOne",
+    "miniStepTwo",
+    "miniStepThree",
     "musicInputNote",
     "exportifyNote",
     "appleMusicNote",
@@ -1144,6 +1158,7 @@ function updateStaticCopy() {
     "apiFooterKicker",
     "apiFooterCopy",
     "exportHelp",
+    "copySimpleButton",
     "exportStepOne",
     "exportStepTwo",
     "exportStepThree",
@@ -2728,6 +2743,28 @@ function downloadTextFile(filename, content) {
   URL.revokeObjectURL(link.href);
   setStatus("connectSpotify");
 }
+
+async function copyTextToClipboard(text) {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error("Clipboard API unavailable");
+  }
+  await navigator.clipboard.writeText(text);
+}
+
+copySimpleButton.addEventListener("click", async () => {
+  const text = getSimpleTracklistText();
+  if (!text) return;
+  try {
+    await copyTextToClipboard(text);
+    setStatus("copied");
+    copySimpleButton.textContent = t("copySimpleButtonCopied");
+    window.setTimeout(() => {
+      copySimpleButton.textContent = t("copySimpleButton");
+    }, 1300);
+  } catch {
+    downloadTextFile("mixory-simple-setlist.txt", text);
+  }
+});
 
 exportSimpleButton.addEventListener("click", () => {
   downloadTextFile("mixory-simple-setlist.txt", getSimpleTracklistText());
