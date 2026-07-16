@@ -877,6 +877,20 @@ h1 {
   }
 }
 
+@keyframes logoSettleMobile {
+  0% {
+    transform: translateY(16px) scale(1.04);
+  }
+
+  62% {
+    transform: translateY(7px) scale(1.02);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes heroTextReveal {
   0% {
     opacity: 0;
@@ -2385,7 +2399,10 @@ textarea:disabled {
   }
 
   .logo-word {
-    width: min(100%, 360px);
+    width: min(100%, 306px);
+    margin-inline: auto;
+    transform-origin: center center;
+    animation-name: logoSettleMobile;
   }
 
   .hero__copy {
