@@ -184,6 +184,97 @@ body.is-set-generated[data-theme="chill-eclectic"] .theme-layer--chill {
   opacity: 0.95;
 }
 
+.flow-intro {
+  position: absolute;
+  inset: -8% -14%;
+  overflow: hidden;
+  opacity: 0;
+  mix-blend-mode: screen;
+  filter: saturate(1.25);
+  animation: flowIntroFade 3800ms ease-out forwards;
+}
+
+.flow-intro span {
+  position: absolute;
+  top: var(--top);
+  left: -34%;
+  width: 168%;
+  height: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0) 18%,
+      color-mix(in srgb, var(--accent) 45%, transparent) 36%,
+      rgba(255, 255, 255, 0.95) 49%,
+      color-mix(in srgb, var(--blue) 58%, transparent) 62%,
+      rgba(255, 255, 255, 0) 82%,
+      transparent 100%
+    );
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--accent) 42%, transparent),
+    0 0 36px color-mix(in srgb, var(--blue) 26%, transparent);
+  opacity: 0;
+  transform: translateX(-26%) rotate(var(--rot)) scaleX(var(--scale));
+  transform-origin: center;
+  animation: flowLineSweep 3000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--delay);
+}
+
+.flow-intro span::before,
+.flow-intro span::after {
+  content: "";
+  position: absolute;
+  inset: -18px 8%;
+  border-radius: 50%;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
+  opacity: 0.75;
+  transform: translateY(-10px) skewX(-18deg);
+}
+
+.flow-intro span::after {
+  inset: -24px 18%;
+  border-top-color: color-mix(in srgb, var(--blue) 34%, transparent);
+  transform: translateY(12px) skewX(14deg);
+}
+
+@keyframes flowIntroFade {
+  0%,
+  8% {
+    opacity: 0;
+  }
+
+  20%,
+  68% {
+    opacity: 0.42;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes flowLineSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-30%) rotate(var(--rot)) scaleX(var(--scale));
+  }
+
+  18% {
+    opacity: 0.95;
+  }
+
+  72% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(28%) rotate(var(--rot)) scaleX(var(--scale));
+  }
+}
+
 button,
 input,
 select,
@@ -219,6 +310,53 @@ textarea {
     transform 180ms ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .flow-intro,
+  .flow-intro span,
+  .logo-word,
+  .logo-word__stroke,
+  .logo-word__fill,
+  .logo-word__shine,
+  .hero__content .eyebrow,
+  .hero__copy,
+  .hero__source,
+  .workspace,
+  .app-footer {
+    animation: none;
+  }
+
+  .flow-intro,
+  .flow-intro span {
+    opacity: 0;
+  }
+
+  .logo-word__stroke {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+
+  .logo-word__fill {
+    opacity: 1;
+  }
+
+  .logo-word__shine {
+    opacity: 0.24;
+  }
+
+  .logo-word {
+    transform: none;
+  }
+
+  .hero__content .eyebrow,
+  .hero__copy,
+  .hero__source,
+  .workspace,
+  .app-footer {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .shell {
   position: relative;
   z-index: 1;
@@ -227,7 +365,7 @@ textarea {
 
 .hero {
   position: relative;
-  min-height: clamp(500px, 64vh, 660px);
+  min-height: clamp(540px, 68vh, 700px);
   overflow: visible;
 }
 
@@ -304,7 +442,27 @@ textarea {
 .hero__content {
   width: calc(100% - 40px);
   max-width: 1180px;
-  margin: clamp(36px, 6vh, 58px) auto 0;
+  margin: clamp(44px, 7vh, 68px) auto 0;
+}
+
+.hero__content .eyebrow,
+.hero__copy,
+.hero__source {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: heroTextReveal 900ms ease-out forwards;
+}
+
+.hero__content .eyebrow {
+  animation-delay: 2600ms;
+}
+
+.hero__copy {
+  animation-delay: 2900ms;
+}
+
+.hero__source {
+  animation-delay: 3180ms;
 }
 
 .eyebrow,
@@ -326,24 +484,170 @@ p {
 h1 {
   max-width: 620px;
   margin-bottom: 14px;
-  font-size: clamp(4rem, 13vw, 9.5rem);
   line-height: 0.86;
   letter-spacing: 0;
 }
 
+.logo-word {
+  width: min(100%, 700px);
+  transform-origin: left center;
+  animation: logoSettle 3400ms cubic-bezier(0.18, 1, 0.3, 1) forwards;
+  filter:
+    drop-shadow(0 18px 42px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 0 24px color-mix(in srgb, var(--accent) 18%, transparent));
+}
+
+.logo-word__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.logo-word__svg text {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 162px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.logo-word__stroke {
+  fill: transparent;
+  stroke: url("#mixoryLogoGradient");
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  filter:
+    drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 46%, transparent))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--blue) 30%, transparent));
+  animation: logoFlowStroke 2800ms cubic-bezier(0.18, 1, 0.3, 1) 180ms forwards;
+}
+
+.logo-word__fill {
+  fill: url("#mixoryLogoGradient");
+  opacity: 0;
+  animation: logoFlowFill 1100ms ease-out 2050ms forwards;
+}
+
+.logo-word__shine {
+  fill: url("#mixoryLogoHighlight");
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translateY(-3px);
+  animation: logoFlowShine 1300ms ease-out 2350ms forwards;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes logoFlowStroke {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 1180;
+    transform: translateX(-18px);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  72% {
+    stroke-dashoffset: 0;
+  }
+
+  100% {
+    opacity: 0.32;
+    stroke-dashoffset: 0;
+    transform: translateX(0);
+  }
+}
+
+@keyframes logoFlowFill {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes logoFlowShine {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0.28;
+  }
+}
+
+@keyframes logoSettle {
+  0% {
+    transform: translateY(24px) scale(1.3);
+  }
+
+  62% {
+    transform: translateY(11px) scale(1.17);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heroTextReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageContentReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hero__copy {
-  max-width: 560px;
+  max-width: 640px;
+  margin-bottom: 0;
   color: rgba(255, 255, 255, 0.84);
-  font-size: clamp(1.06rem, 2vw, 1.35rem);
-  line-height: 1.55;
+  font-size: 1.28rem;
+  line-height: 1.62;
+  word-spacing: 0.08em;
+  text-wrap: balance;
 }
 
 .hero__source {
   max-width: 560px;
-  margin-top: 12px;
+  margin-top: 20px;
   color: rgba(255, 255, 255, 0.66);
   font-size: 0.86rem;
   font-weight: 750;
+  line-height: 1.45;
 }
 
 .hero__source a {
@@ -358,10 +662,13 @@ h1 {
   gap: 22px;
   width: calc(100% - 40px);
   max-width: 1180px;
-  margin: -34px auto 64px;
+  margin: -14px auto 64px;
   align-items: start;
   position: relative;
   z-index: 2;
+  opacity: 0;
+  transform: translateY(24px);
+  animation: pageContentReveal 900ms ease-out 3600ms forwards;
 }
 
 .builder,
@@ -512,6 +819,9 @@ h1 {
   margin: 0 auto;
   padding: 28px 0 44px;
   color: rgba(255, 255, 255, 0.78);
+  opacity: 0;
+  transform: translateY(18px);
+  animation: pageContentReveal 900ms ease-out 3820ms forwards;
 }
 
 .app-footer p {
@@ -536,6 +846,17 @@ h1 {
   color: #fff;
   font-size: 0.82rem;
   font-weight: 900;
+}
+
+@media (max-width: 1180px) {
+  .logo-word {
+    width: min(100%, 620px);
+  }
+
+  .hero__copy {
+    max-width: 590px;
+    font-size: 1.2rem;
+  }
 }
 
 .file-chip input {
@@ -1696,6 +2017,16 @@ textarea:disabled {
     margin-top: 80px;
   }
 
+  .logo-word {
+    width: min(100%, 540px);
+  }
+
+  .hero__copy {
+    max-width: 520px;
+    font-size: 1.12rem;
+    line-height: 1.58;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
     margin-top: -70px;
@@ -1718,12 +2049,15 @@ textarea:disabled {
     padding: 18px;
   }
 
-  h1 {
-    font-size: clamp(3.35rem, 18vw, 4.4rem);
+  .logo-word {
+    width: min(100%, 360px);
   }
 
   .hero__copy {
     max-width: min(100%, 310px);
+    font-size: 1.02rem;
+    line-height: 1.55;
+    word-spacing: 0.04em;
   }
 
   .control-grid,

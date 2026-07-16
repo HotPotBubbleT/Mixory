@@ -7,13 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=mixory-20260707-hero-spacing" />
+    <link rel="stylesheet" href="styles.css?v=mixory-20260716-flow-page-reveal" />
   </head>
   <body>
     <div class="page-background" aria-hidden="true">
       <div class="theme-layer theme-layer--house"></div>
       <div class="theme-layer theme-layer--rave"></div>
       <div class="theme-layer theme-layer--chill"></div>
+      <div class="flow-intro" aria-hidden="true">
+        <span style="--top: 30%; --delay: 0ms; --rot: -4deg; --scale: 1;"></span>
+        <span style="--top: 43%; --delay: 110ms; --rot: 3deg; --scale: 0.82;"></span>
+        <span style="--top: 57%; --delay: 220ms; --rot: -2deg; --scale: 0.7;"></span>
+        <span style="--top: 68%; --delay: 330ms; --rot: 4deg; --scale: 0.56;"></span>
+      </div>
     </div>
     <main class="shell">
       <section class="hero" aria-label="Playlist to DJ-style flow optimizer">
@@ -32,7 +38,27 @@
 
         <div class="hero__content">
           <p class="eyebrow" id="heroEyebrow">Playlist to DJ-style flow</p>
-          <h1>Mixory</h1>
+          <h1 class="logo-word" aria-label="Mixory">
+            <svg class="logo-word__svg" viewBox="0 0 760 190" role="img" aria-hidden="true">
+              <defs>
+                <linearGradient id="mixoryLogoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ff7a4e" />
+                  <stop offset="42%" stop-color="#ff4fa1" />
+                  <stop offset="72%" stop-color="#9b58ff" />
+                  <stop offset="100%" stop-color="#5f8dff" />
+                </linearGradient>
+                <linearGradient id="mixoryLogoHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+                  <stop offset="55%" stop-color="#ffffff" stop-opacity="0.72" />
+                  <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9" />
+                </linearGradient>
+              </defs>
+              <text class="logo-word__stroke" x="0" y="146">Mixory</text>
+              <text class="logo-word__fill" x="0" y="146">Mixory</text>
+              <text class="logo-word__shine" x="0" y="146">Mixory</text>
+            </svg>
+            <span class="visually-hidden">Mixory</span>
+          </h1>
           <p class="hero__copy" id="heroCopy">
             Mixory reshapes your playlist into a smoother mix flow for Apple Music AutoMix / Spotify Mix.
           </p>
