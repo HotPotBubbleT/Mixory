@@ -365,37 +365,37 @@ body.is-set-generated[data-theme="chill-eclectic"] .theme-layer--chill {
   0% {
     opacity: 0.24;
     clip-path: inset(0 96% 0 0);
-    transform: translate(70px, 8px) scaleX(0.9);
+    transform: translateY(8px) scaleX(0.9);
   }
 
   8% {
     opacity: 0.42;
     clip-path: inset(0 84% 0 0);
-    transform: translate(70px, 4px) scaleX(0.94);
+    transform: translateY(4px) scaleX(0.94);
   }
 
   18% {
     opacity: 0.5;
     clip-path: inset(0 74% 0 0);
-    transform: translate(70px, 1px) scaleX(0.97);
+    transform: translateY(1px) scaleX(0.97);
   }
 
   54% {
     opacity: 0.56;
     clip-path: inset(0 20% 0 0);
-    transform: translate(70px, -1px) scaleX(1);
+    transform: translateY(-1px) scaleX(1);
   }
 
   72% {
     opacity: 0.22;
     clip-path: inset(0 0 0 0);
-    transform: translate(70px, -2px) scaleX(1.02);
+    transform: translateY(-2px) scaleX(1.02);
   }
 
   100% {
     opacity: 0;
     clip-path: inset(0 0 0 0);
-    transform: translate(70px, -8px) scaleX(1.03);
+    transform: translateY(-8px) scaleX(1.03);
   }
 }
 
@@ -917,15 +917,15 @@ h1 {
 
 @keyframes logoSettleMobile {
   0% {
-    transform: translateY(16px) scale(1.04);
+    transform: translateX(0) translateY(16px) scale(1.04);
   }
 
   62% {
-    transform: translateY(7px) scale(1.02);
+    transform: translateX(0) translateY(7px) scale(1.02);
   }
 
   100% {
-    transform: translateY(0) scale(1);
+    transform: translateX(var(--mobile-logo-final-shift, 0)) translateY(0) scale(1);
   }
 }
 
@@ -2437,18 +2437,20 @@ textarea:disabled {
   }
 
   .logo-word {
-    width: min(100%, 306px);
-    margin-inline: 0;
-    transform-origin: left center;
+    --mobile-logo-width: min(calc(100vw - 56px), 306px);
+    --mobile-logo-final-shift: calc((var(--mobile-logo-width) - (100vw - 56px)) / 2);
+    width: var(--mobile-logo-width);
+    margin-inline: auto;
+    transform-origin: center;
     animation-name: logoSettleMobile;
   }
 
   .audio-pulse {
-    left: 28px;
-    top: clamp(315px, 36vh, 365px);
-    width: min(250px, calc(100vw - 96px));
-    height: 82px;
-    transform: translate(70px, 0) scaleX(0.94);
+    left: calc(50vw - 88px);
+    top: clamp(292px, 33vh, 336px);
+    width: min(210px, calc(100vw - 128px));
+    height: 78px;
+    transform: translateY(0) scaleX(0.94);
     animation-name: audioPulseFlowMobile;
   }
 
