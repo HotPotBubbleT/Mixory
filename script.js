@@ -31,6 +31,7 @@ const exportSteps = document.querySelector("#exportSteps");
 const resultPanel = document.querySelector("#set-preview");
 const exportSimpleButton = document.querySelector("#exportSimpleButton");
 const exportDetailedButton = document.querySelector("#exportDetailedButton");
+const languageToggle = document.querySelector(".language-toggle");
 const languageButtons = document.querySelectorAll(".language-toggle__button");
 const analyzeButton = document.querySelector("#analyzeButton");
 const surpriseButton = document.querySelector("#surpriseButton");
@@ -1064,9 +1065,17 @@ function formatLength(value) {
   return lengthLabels[currentLang][value] ?? `${value} ${copy[currentLang].min}`;
 }
 
+function syncLanguageToggle(lang = currentLang) {
+  document.body.dataset.lang = lang;
+  if (languageToggle) languageToggle.dataset.activeLang = lang;
+  languageButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.lang === lang);
+  });
+}
+
 function updateStaticCopy() {
   document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
-  document.body.dataset.lang = currentLang;
+  syncLanguageToggle(currentLang);
   document.title = currentLang === "zh" ? "Mixory - 歌单流畅播放顺序" : "Mixory - Playlist to DJ-style Flow";
 
   [
@@ -1161,9 +1170,7 @@ function updateStaticCopy() {
   document.querySelectorAll('input[name="vibe"]').forEach((input) => {
     input.nextElementSibling.textContent = getVibeLabel(input.value);
   });
-  languageButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.lang === currentLang);
-  });
+  syncLanguageToggle(currentLang);
   setStatus(statusKey);
   updateSetLengthWarning();
   renderParsedPreview();
@@ -2782,10 +2789,7 @@ languageButtons.forEach((button) => {
     if (nextLang === currentLang) return;
 
     document.body.classList.add("is-language-switching");
-    languageButtons.forEach((item) => {
-      item.classList.toggle("is-active", item.dataset.lang === nextLang);
-    });
-    document.body.dataset.lang = nextLang;
+    syncLanguageToggle(nextLang);
 
     window.setTimeout(() => {
       currentLang = nextLang;

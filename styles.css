@@ -456,6 +456,7 @@ body.is-language-switching .app-footer {
     box-shadow 280ms ease;
 }
 
+.language-toggle[data-active-lang="zh"]::before,
 body[data-lang="zh"] .language-toggle::before {
   transform: translateX(44px);
 }
@@ -480,6 +481,16 @@ body[data-lang="zh"] .language-toggle::before {
 .language-toggle__button.is-active {
   background: transparent;
   color: var(--ink);
+}
+
+.language-toggle[data-active-lang="en"] .language-toggle__button[data-lang="en"],
+.language-toggle[data-active-lang="zh"] .language-toggle__button[data-lang="zh"] {
+  color: var(--ink);
+}
+
+.language-toggle[data-active-lang="en"] .language-toggle__button[data-lang="zh"],
+.language-toggle[data-active-lang="zh"] .language-toggle__button[data-lang="en"] {
+  color: rgba(255, 255, 255, 0.76);
 }
 
 .language-toggle__button:active {
