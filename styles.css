@@ -314,6 +314,7 @@ textarea {
   .flow-intro,
   .flow-intro span,
   .logo-word,
+  .logo-word__trace,
   .logo-word__stroke,
   .logo-word__fill,
   .logo-word__shine,
@@ -330,9 +331,11 @@ textarea {
     opacity: 0;
   }
 
+  .logo-word__trace,
   .logo-word__stroke {
     opacity: 0;
     stroke-dashoffset: 0;
+    clip-path: inset(0 0 0 0);
   }
 
   .logo-word__fill {
@@ -454,15 +457,15 @@ textarea {
 }
 
 .hero__content .eyebrow {
-  animation-delay: 2600ms;
+  animation-delay: 3140ms;
 }
 
 .hero__copy {
-  animation-delay: 2900ms;
+  animation-delay: 3320ms;
 }
 
 .hero__source {
-  animation-delay: 3180ms;
+  animation-delay: 3500ms;
 }
 
 .eyebrow,
@@ -491,10 +494,10 @@ h1 {
 .logo-word {
   width: min(100%, 700px);
   transform-origin: left center;
-  animation: logoSettle 3400ms cubic-bezier(0.18, 1, 0.3, 1) forwards;
+  animation: logoSettle 3320ms cubic-bezier(0.18, 1, 0.3, 1) forwards;
   filter:
-    drop-shadow(0 18px 42px rgba(0, 0, 0, 0.28))
-    drop-shadow(0 0 24px color-mix(in srgb, var(--accent) 18%, transparent));
+    drop-shadow(0 16px 34px rgba(0, 0, 0, 0.24))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 10%, transparent));
 }
 
 .logo-word__svg {
@@ -504,39 +507,50 @@ h1 {
   overflow: visible;
 }
 
-.logo-word__svg text {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 162px;
-  font-weight: 800;
-  letter-spacing: 0;
+.logo-word__trace {
+  fill: transparent;
+  stroke: url("#mixoryLogoHighlight");
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  opacity: 0;
+  mix-blend-mode: screen;
+  clip-path: inset(0 100% 0 0);
+  filter:
+    drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 38%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--blue) 24%, transparent));
+  animation: logoFlowTrace 3580ms cubic-bezier(0.18, 1, 0.3, 1) 80ms forwards;
 }
 
 .logo-word__stroke {
   fill: transparent;
   stroke: url("#mixoryLogoGradient");
-  stroke-width: 3;
+  stroke-width: 2.8;
   stroke-linejoin: round;
   stroke-linecap: round;
-  stroke-dasharray: 1180;
-  stroke-dashoffset: 1180;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
   filter:
-    drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 46%, transparent))
-    drop-shadow(0 0 18px color-mix(in srgb, var(--blue) 30%, transparent));
-  animation: logoFlowStroke 2800ms cubic-bezier(0.18, 1, 0.3, 1) 180ms forwards;
+    drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 22%, transparent));
+  animation: logoFlowStroke 3660ms cubic-bezier(0.18, 1, 0.3, 1) 100ms forwards;
 }
 
 .logo-word__fill {
   fill: url("#mixoryLogoGradient");
   opacity: 0;
-  animation: logoFlowFill 1100ms ease-out 2050ms forwards;
+  animation: logoFlowFill 760ms ease-out 3060ms forwards;
 }
 
 .logo-word__shine {
   fill: url("#mixoryLogoHighlight");
   opacity: 0;
   mix-blend-mode: screen;
-  transform: translateY(-3px);
-  animation: logoFlowShine 1300ms ease-out 2350ms forwards;
+  transform: translateY(-1px);
+  animation: logoFlowShine 760ms ease-out 3240ms forwards;
 }
 
 .visually-hidden {
@@ -549,25 +563,50 @@ h1 {
   white-space: nowrap;
 }
 
-@keyframes logoFlowStroke {
+@keyframes logoFlowTrace {
   0% {
     opacity: 0;
-    stroke-dashoffset: 1180;
-    transform: translateX(-18px);
+    stroke-dashoffset: 1200;
+    clip-path: inset(0 100% 0 0);
   }
 
-  18% {
-    opacity: 1;
+  14% {
+    opacity: 0.95;
   }
 
-  72% {
+  88% {
+    opacity: 0.95;
     stroke-dashoffset: 0;
+    clip-path: inset(0 0 0 0);
   }
 
   100% {
-    opacity: 0.32;
+    opacity: 0;
     stroke-dashoffset: 0;
-    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes logoFlowStroke {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 1200;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  18% {
+    opacity: 0.9;
+  }
+
+  87% {
+    stroke-dashoffset: 0;
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    opacity: 0.16;
+    stroke-dashoffset: 0;
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -589,7 +628,7 @@ h1 {
   }
 
   100% {
-    opacity: 0.28;
+    opacity: 0.08;
   }
 }
 
@@ -668,7 +707,7 @@ h1 {
   z-index: 2;
   opacity: 0;
   transform: translateY(24px);
-  animation: pageContentReveal 900ms ease-out 3600ms forwards;
+  animation: pageContentReveal 760ms ease-out 3260ms forwards;
 }
 
 .builder,
@@ -821,7 +860,7 @@ h1 {
   color: rgba(255, 255, 255, 0.78);
   opacity: 0;
   transform: translateY(18px);
-  animation: pageContentReveal 900ms ease-out 3820ms forwards;
+  animation: pageContentReveal 760ms ease-out 3440ms forwards;
 }
 
 .app-footer p {
