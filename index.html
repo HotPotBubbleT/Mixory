@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=mixory-20260716-mobile-flow-arrows" />
+    <link rel="stylesheet" href="styles.css?v=mixory-20260716-mobile-status" />
   </head>
   <body>
     <div class="page-background" aria-hidden="true">
@@ -173,6 +173,11 @@
             </p>
             <div class="actions insight-actions insight-actions--top">
               <button class="button button--primary" type="button" id="analyzeButton">Analyze tracks</button>
+            </div>
+            <div class="output-state output-state--mobile" id="mobileOutputState" aria-live="polite">
+              <div class="output-state__icon" id="mobileOutputStateIcon">?</div>
+              <strong id="mobileOutputStateTitle">Add tracks first</strong>
+              <p id="mobileOutputStateCopy">Add tracks, then analyze.</p>
             </div>
             <div class="genre-bars" id="genreBars"></div>
             <div class="insight-stats">
@@ -429,6 +434,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=mixory-20260716-mobile-flow-arrows"></script>
+    <script src="script.js?v=mixory-20260716-mobile-status"></script>
   </body>
 </html>

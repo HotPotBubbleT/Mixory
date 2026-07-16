@@ -19,6 +19,10 @@ const outputState = document.querySelector("#outputState");
 const outputStateIcon = document.querySelector("#outputStateIcon");
 const outputStateTitle = document.querySelector("#outputStateTitle");
 const outputStateCopy = document.querySelector("#outputStateCopy");
+const mobileOutputState = document.querySelector("#mobileOutputState");
+const mobileOutputStateIcon = document.querySelector("#mobileOutputStateIcon");
+const mobileOutputStateTitle = document.querySelector("#mobileOutputStateTitle");
+const mobileOutputStateCopy = document.querySelector("#mobileOutputStateCopy");
 const betaNote = document.querySelector("#betaNote");
 const setRationale = document.querySelector("#setRationale");
 const setRationaleCopy = document.querySelector("#setRationaleCopy");
@@ -955,8 +959,10 @@ function setResultStage(stage = "compact") {
 
 function setOutputState(mode, titleKey, copyKey) {
   outputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error");
+  if (mobileOutputState) mobileOutputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error");
   if (mode === "hidden") {
     outputState.classList.add("is-hidden");
+    if (mobileOutputState) mobileOutputState.classList.add("is-hidden");
     return;
   }
   if (mode === "loading") outputState.classList.add("is-loading");
@@ -965,6 +971,14 @@ function setOutputState(mode, titleKey, copyKey) {
   outputStateIcon.textContent = mode === "success" ? "OK" : mode === "error" ? "!" : "?";
   outputStateTitle.textContent = t(titleKey);
   outputStateCopy.textContent = t(copyKey);
+  if (mobileOutputState) {
+    if (mode === "loading") mobileOutputState.classList.add("is-loading");
+    if (mode === "success") mobileOutputState.classList.add("is-success");
+    if (mode === "error") mobileOutputState.classList.add("is-error");
+    mobileOutputStateIcon.textContent = outputStateIcon.textContent;
+    mobileOutputStateTitle.textContent = outputStateTitle.textContent;
+    mobileOutputStateCopy.textContent = outputStateCopy.textContent;
+  }
 }
 
 function showEmptyOutput() {
