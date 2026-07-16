@@ -2124,7 +2124,7 @@ textarea:disabled {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 18px;
+  gap: 8px 20px;
   margin-bottom: 10px;
 }
 
@@ -2143,11 +2143,14 @@ textarea:disabled {
 }
 
 .export-step:not(:last-child)::after {
-  content: "->";
+  content: "›";
   position: absolute;
-  left: calc(100% + 6px);
+  left: calc(100% + 7px);
+  top: 50%;
+  transform: translateY(-54%);
   color: color-mix(in srgb, var(--accent) 70%, var(--muted));
-  font-size: 0.74rem;
+  font-size: 1rem;
+  line-height: 1;
   font-weight: 900;
 }
 
