@@ -23,6 +23,10 @@ const mobileOutputState = document.querySelector("#mobileOutputState");
 const mobileOutputStateIcon = document.querySelector("#mobileOutputStateIcon");
 const mobileOutputStateTitle = document.querySelector("#mobileOutputStateTitle");
 const mobileOutputStateCopy = document.querySelector("#mobileOutputStateCopy");
+const flowMobileState = document.querySelector("#flowMobileState");
+const flowMobileStateIcon = document.querySelector("#flowMobileStateIcon");
+const flowMobileStateTitle = document.querySelector("#flowMobileStateTitle");
+const flowMobileStateCopy = document.querySelector("#flowMobileStateCopy");
 const betaNote = document.querySelector("#betaNote");
 const setRationale = document.querySelector("#setRationale");
 const setRationaleCopy = document.querySelector("#setRationaleCopy");
@@ -969,6 +973,7 @@ function clearOutputSuccessHideTimer() {
   }
   outputState.classList.remove("is-dismissing");
   if (mobileOutputState) mobileOutputState.classList.remove("is-dismissing");
+  if (flowMobileState) flowMobileState.classList.remove("is-dismissing");
   resultPanel.classList.remove("is-set-handoff");
 }
 
@@ -978,6 +983,7 @@ function scheduleOutputSuccessAutoHide() {
     resultPanel.classList.add("is-set-handoff");
     outputState.classList.add("is-dismissing");
     if (mobileOutputState) mobileOutputState.classList.add("is-dismissing");
+    if (flowMobileState) flowMobileState.classList.add("is-dismissing");
     outputSuccessHideTimer = window.setTimeout(() => {
       setOutputState("hidden");
       resultPanel.classList.remove("is-set-handoff");
@@ -986,12 +992,29 @@ function scheduleOutputSuccessAutoHide() {
   }, 1750);
 }
 
-function setOutputState(mode, titleKey, copyKey) {
+function syncMobileOutputState(node, iconNode, titleNode, copyNode, mode, titleKey, copyKey, isActive) {
+  if (!node) return;
+  node.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
+  if (!isActive || mode === "hidden") {
+    node.classList.add("is-hidden");
+    return;
+  }
+  if (mode === "loading") node.classList.add("is-loading");
+  if (mode === "success") node.classList.add("is-success");
+  if (mode === "error") node.classList.add("is-error");
+  iconNode.textContent = outputStateIcon.textContent;
+  titleNode.textContent = t(titleKey);
+  copyNode.textContent = t(copyKey);
+}
+
+function setOutputState(mode, titleKey, copyKey, { mobilePlacement = "input", scrollMobile = false } = {}) {
   outputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
   if (mobileOutputState) mobileOutputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
+  if (flowMobileState) flowMobileState.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
   if (mode === "hidden") {
     outputState.classList.add("is-hidden");
     if (mobileOutputState) mobileOutputState.classList.add("is-hidden");
+    if (flowMobileState) flowMobileState.classList.add("is-hidden");
     return;
   }
   if (mode === "loading") outputState.classList.add("is-loading");
@@ -1000,23 +1023,18 @@ function setOutputState(mode, titleKey, copyKey) {
   outputStateIcon.textContent = mode === "success" ? "OK" : mode === "error" ? "!" : "?";
   outputStateTitle.textContent = t(titleKey);
   outputStateCopy.textContent = t(copyKey);
-  if (mobileOutputState) {
-    if (mode === "loading") mobileOutputState.classList.add("is-loading");
-    if (mode === "success") mobileOutputState.classList.add("is-success");
-    if (mode === "error") mobileOutputState.classList.add("is-error");
-    mobileOutputStateIcon.textContent = outputStateIcon.textContent;
-    mobileOutputStateTitle.textContent = outputStateTitle.textContent;
-    mobileOutputStateCopy.textContent = outputStateCopy.textContent;
-  }
+  syncMobileOutputState(mobileOutputState, mobileOutputStateIcon, mobileOutputStateTitle, mobileOutputStateCopy, mode, titleKey, copyKey, mobilePlacement === "input");
+  syncMobileOutputState(flowMobileState, flowMobileStateIcon, flowMobileStateTitle, flowMobileStateCopy, mode, titleKey, copyKey, mobilePlacement === "flow");
 
   if (mode === "loading" || mode === "success") {
     requestAnimationFrame(() => {
       outputState.classList.add("is-fresh");
-      if (mobileOutputState) mobileOutputState.classList.add("is-fresh");
+      if (mobilePlacement === "input" && mobileOutputState) mobileOutputState.classList.add("is-fresh");
+      if (mobilePlacement === "flow" && flowMobileState) flowMobileState.classList.add("is-fresh");
     });
   }
 
-  if (mode === "loading" && mobileOutputState && window.matchMedia("(max-width: 720px)").matches) {
+  if (scrollMobile && mode === "loading" && mobileOutputState && window.matchMedia("(max-width: 720px)").matches) {
     window.setTimeout(() => {
       mobileOutputState.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 80);
@@ -1029,7 +1047,7 @@ function showEmptyOutput() {
   setOutputState("idle", hasMusicInput() ? "outputReadyTitle" : "outputEmptyTitle", hasMusicInput() ? "outputReadyCopy" : "outputEmptyCopy");
 }
 
-function showOutputLoading(titleKey = "outputGenerateTitle", copyKey = "outputGenerateCopy") {
+function showOutputLoading(titleKey = "outputGenerateTitle", copyKey = "outputGenerateCopy", { mobilePlacement = "input", scrollMobile = false } = {}) {
   clearOutputSuccessHideTimer();
   setResultStage("compact");
   updateVisualTheme(getFormData().genre, false);
@@ -1047,13 +1065,13 @@ function showOutputLoading(titleKey = "outputGenerateTitle", copyKey = "outputGe
   if (setVersion) setVersion.hidden = true;
   if (exportSteps) exportSteps.hidden = true;
   setExportEnabled(false);
-  setOutputState("loading", titleKey, copyKey);
+  setOutputState("loading", titleKey, copyKey, { mobilePlacement, scrollMobile });
 }
 
-function showOutputSuccess(titleKey = "outputGenerateSuccessTitle", copyKey = "outputGenerateSuccessCopy", { autoHide = false } = {}) {
+function showOutputSuccess(titleKey = "outputGenerateSuccessTitle", copyKey = "outputGenerateSuccessCopy", { autoHide = false, mobilePlacement = "input" } = {}) {
   clearOutputSuccessHideTimer();
   tracklist.classList.remove("is-loading");
-  setOutputState("success", titleKey, copyKey);
+  setOutputState("success", titleKey, copyKey, { mobilePlacement });
   if (autoHide) scheduleOutputSuccessAutoHide();
 }
 
@@ -2677,11 +2695,11 @@ form.addEventListener("submit", async (event) => {
     return;
   }
   setStatus("optimized");
-  showOutputLoading();
+  showOutputLoading("outputGenerateTitle", "outputGenerateCopy", { mobilePlacement: "flow" });
   renderInsight();
   await sleep(920);
   renderSet(getFormData(), { animate: true });
-  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true });
+  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true, mobilePlacement: "flow" });
 });
 
 resetButton.addEventListener("click", () => {
@@ -2750,7 +2768,7 @@ analyzeButton.addEventListener("click", async () => {
     updateInputGate();
     setInsightVisible(false);
     setFlowSettingsVisible(false);
-    showOutputLoading("outputAnalyzeTitle", "outputAnalyzeCopy");
+    showOutputLoading("outputAnalyzeTitle", "outputAnalyzeCopy", { mobilePlacement: "input", scrollMobile: true });
     const usedRealTrackData = await analyzePlaylistWithBackend();
     hasPlaylistAnalysis = usedRealTrackData;
     updateInputGate();
@@ -2806,12 +2824,12 @@ surpriseButton.addEventListener("click", async () => {
     vibe
   });
   setStatus("surprised");
-  showOutputLoading();
+  showOutputLoading("outputGenerateTitle", "outputGenerateCopy", { mobilePlacement: "flow" });
   renderInsight(getFormData());
   updateSetLengthWarning();
   await sleep(920);
   renderSet(getFormData(), { animate: true });
-  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true });
+  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true, mobilePlacement: "flow" });
 });
 
 useRecommendationButton.addEventListener("click", () => {

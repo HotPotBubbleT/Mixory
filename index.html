@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=mixory-20260717-output-state-top" />
+    <link rel="stylesheet" href="styles.css?v=mixory-20260717-mobile-flow-status" />
   </head>
   <body>
     <div class="page-background" aria-hidden="true">
@@ -310,6 +310,11 @@
               <button class="button button--primary" type="submit" id="generateButton">Generate flow</button>
               <button class="button button--ghost" type="button" id="resetButton">Reset</button>
             </div>
+            <div class="output-state output-state--mobile output-state--flow-mobile is-hidden" id="flowMobileState" aria-live="polite">
+              <div class="output-state__icon" id="flowMobileStateIcon">?</div>
+              <strong id="flowMobileStateTitle">Generating playlist flow</strong>
+              <p id="flowMobileStateCopy">Mixory is shaping the order and energy arc.</p>
+            </div>
           </section>
         </form>
 
@@ -435,6 +440,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=mixory-20260717-output-state-top"></script>
+    <script src="script.js?v=mixory-20260717-mobile-flow-status"></script>
   </body>
 </html>

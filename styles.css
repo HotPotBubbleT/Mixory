@@ -2594,6 +2594,11 @@ textarea:disabled {
     background: rgba(255, 255, 255, 0.62);
   }
 
+  .output-state--flow-mobile {
+    margin: 14px 0 2px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
   .output-state--mobile .output-state__icon {
     grid-row: 1 / 3;
     width: 36px;
