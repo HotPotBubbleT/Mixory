@@ -48,6 +48,8 @@ const insightBpm = document.querySelector("#insightBpm");
 const recommendedSet = document.querySelector("#recommendedSet");
 const recommendationReason = document.querySelector("#recommendationReason");
 const setLengthWarning = document.querySelector("#setLengthWarning");
+const insightCard = document.querySelector("#insightCard");
+const flowSettings = document.querySelector("#flowSettings");
 const parsedPreview = document.querySelector("#parsedPreview");
 const parsedTrackList = document.querySelector("#parsedTrackList");
 const formatButtons = document.querySelectorAll(".format-toggle__button");
@@ -65,6 +67,9 @@ let hasPlaylistAnalysis = false;
 let draggedTrackIndex = null;
 let uploadedPlaylistRawText = "";
 const setVersionMode = "smoothest";
+let isAnalyzing = false;
+let trackDomKeyCounter = 0;
+let outputSuccessHideTimer = null;
 
 try {
   const urlLang = new URLSearchParams(window.location.search).get("lang");
@@ -185,7 +190,7 @@ const copy = {
     moveDownLabel: "Move down",
     apiFooterKicker: "Data sources",
     apiFooterCopy: "Mixory combines BPM/key hints from GetSongBPM, metadata clues from MusicBrainz and Last.fm, and local reference sets to shape smoother playlist flows. Results are estimates, so review before playing.",
-    exportHelp: "Copy Simple List for quick search, or export TXT for later.",
+    exportHelp: "Copy Simple List sends the clean title / artist list to your clipboard for quick search; export TXT if you want to save it for later.",
     copySimpleButton: "Copy Simple List",
     copySimpleButtonCopied: "Copied",
     exportSimpleButton: "Export Simple TXT",
@@ -317,7 +322,7 @@ const copy = {
     moveDownLabel: "下移",
     apiFooterKicker: "数据来源",
     apiFooterCopy: "Mixory 会结合 GetSongBPM 的 BPM/调性参考、MusicBrainz 和 Last.fm 的曲目信息线索，以及本地 reference set 的能量走势，整理出更流畅自然的 playlist flow。结果是估算，正式播放前建议再检查。",
-    exportHelp: "复制简洁列表方便搜索并新建歌单；也可以导出 TXT 留着之后用。",
+    exportHelp: "点“复制简洁列表”会直接复制歌名 / 艺人到剪贴板，方便搜索并新建歌单；也可以导出 TXT 留着之后用。",
     copySimpleButton: "复制简洁列表",
     copySimpleButtonCopied: "已复制",
     exportSimpleButton: "导出简洁 TXT",
@@ -957,9 +962,33 @@ function setResultStage(stage = "compact") {
   resultPanel.classList.toggle("result--generated", stage === "generated");
 }
 
+function clearOutputSuccessHideTimer() {
+  if (outputSuccessHideTimer) {
+    window.clearTimeout(outputSuccessHideTimer);
+    outputSuccessHideTimer = null;
+  }
+  outputState.classList.remove("is-dismissing");
+  if (mobileOutputState) mobileOutputState.classList.remove("is-dismissing");
+  resultPanel.classList.remove("is-set-handoff");
+}
+
+function scheduleOutputSuccessAutoHide() {
+  clearOutputSuccessHideTimer();
+  outputSuccessHideTimer = window.setTimeout(() => {
+    resultPanel.classList.add("is-set-handoff");
+    outputState.classList.add("is-dismissing");
+    if (mobileOutputState) mobileOutputState.classList.add("is-dismissing");
+    outputSuccessHideTimer = window.setTimeout(() => {
+      setOutputState("hidden");
+      resultPanel.classList.remove("is-set-handoff");
+      outputSuccessHideTimer = null;
+    }, 680);
+  }, 1750);
+}
+
 function setOutputState(mode, titleKey, copyKey) {
-  outputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error");
-  if (mobileOutputState) mobileOutputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error");
+  outputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
+  if (mobileOutputState) mobileOutputState.classList.remove("is-hidden", "is-loading", "is-success", "is-error", "is-fresh", "is-dismissing");
   if (mode === "hidden") {
     outputState.classList.add("is-hidden");
     if (mobileOutputState) mobileOutputState.classList.add("is-hidden");
@@ -979,14 +1008,29 @@ function setOutputState(mode, titleKey, copyKey) {
     mobileOutputStateTitle.textContent = outputStateTitle.textContent;
     mobileOutputStateCopy.textContent = outputStateCopy.textContent;
   }
+
+  if (mode === "loading" || mode === "success") {
+    requestAnimationFrame(() => {
+      outputState.classList.add("is-fresh");
+      if (mobileOutputState) mobileOutputState.classList.add("is-fresh");
+    });
+  }
+
+  if (mode === "loading" && mobileOutputState && window.matchMedia("(max-width: 720px)").matches) {
+    window.setTimeout(() => {
+      mobileOutputState.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  }
 }
 
 function showEmptyOutput() {
+  clearOutputSuccessHideTimer();
   resetOutputSummary();
   setOutputState("idle", hasMusicInput() ? "outputReadyTitle" : "outputEmptyTitle", hasMusicInput() ? "outputReadyCopy" : "outputEmptyCopy");
 }
 
 function showOutputLoading(titleKey = "outputGenerateTitle", copyKey = "outputGenerateCopy") {
+  clearOutputSuccessHideTimer();
   setResultStage("compact");
   updateVisualTheme(getFormData().genre, false);
   resultTitle.textContent = currentLang === "zh" ? "正在处理" : "Working";
@@ -1006,12 +1050,15 @@ function showOutputLoading(titleKey = "outputGenerateTitle", copyKey = "outputGe
   setOutputState("loading", titleKey, copyKey);
 }
 
-function showOutputSuccess(titleKey = "outputGenerateSuccessTitle", copyKey = "outputGenerateSuccessCopy") {
+function showOutputSuccess(titleKey = "outputGenerateSuccessTitle", copyKey = "outputGenerateSuccessCopy", { autoHide = false } = {}) {
+  clearOutputSuccessHideTimer();
   tracklist.classList.remove("is-loading");
   setOutputState("success", titleKey, copyKey);
+  if (autoHide) scheduleOutputSuccessAutoHide();
 }
 
 function showOutputError(titleKey = "outputAnalyzeErrorTitle", copyKey = "outputAnalyzeErrorCopy") {
+  clearOutputSuccessHideTimer();
   tracklist.classList.remove("is-loading");
   setOutputState("error", titleKey, copyKey);
 }
@@ -1039,7 +1086,7 @@ function setFlowEnabled(isEnabled) {
     control.disabled = !canConfigureSet;
   });
 
-  analyzeButton.disabled = !isEnabled;
+  analyzeButton.disabled = !isEnabled || isAnalyzing;
 
   document.querySelectorAll('input[name="vibe"]').forEach((input) => {
     input.disabled = !canConfigureSet;
@@ -1049,10 +1096,36 @@ function setFlowEnabled(isEnabled) {
   document.querySelector(".builder").classList.toggle("is-waiting-for-analysis", isEnabled && !hasPlaylistAnalysis);
 }
 
+function setAnalyzeButtonLabel(labelKey = "analyzeButton") {
+  if (analyzeButton) analyzeButton.textContent = t(labelKey);
+}
+
 function setExportEnabled(isEnabled) {
   [copySimpleButton, exportSimpleButton, exportDetailedButton].forEach((control) => {
     control.disabled = !isEnabled;
   });
+}
+
+function setInsightVisible(isVisible, animate = false) {
+  if (!insightCard) return;
+  insightCard.hidden = !isVisible;
+  insightCard.classList.toggle("is-revealed", false);
+  if (isVisible && animate) {
+    requestAnimationFrame(() => {
+      insightCard.classList.add("is-revealed");
+    });
+  }
+}
+
+function setFlowSettingsVisible(isVisible, animate = false) {
+  if (!flowSettings) return;
+  flowSettings.hidden = !isVisible;
+  flowSettings.classList.toggle("is-revealed", false);
+  if (isVisible && animate) {
+    requestAnimationFrame(() => {
+      flowSettings.classList.add("is-revealed");
+    });
+  }
 }
 
 function updateInputGate() {
@@ -1062,9 +1135,11 @@ function updateInputGate() {
   setFlowEnabled(isEnabled);
   if (!isEnabled) {
     setStatus("needsLink");
+    setAnalyzeButtonLabel();
     showEmptyOutput();
   } else if (statusKey === "needsLink") {
     setStatus("ready");
+    setAnalyzeButtonLabel();
     showEmptyOutput();
   }
 }
@@ -1201,6 +1276,7 @@ function updateStaticCopy() {
   });
   syncLanguageToggle(currentLang);
   setStatus(statusKey);
+  setAnalyzeButtonLabel(isAnalyzing ? "outputAnalyzeTitle" : hasPlaylistAnalysis ? "outputAnalyzeSuccessTitle" : "analyzeButton");
   updateSetLengthWarning();
   renderParsedPreview();
 }
@@ -2502,13 +2578,14 @@ function updateSetSummary(data = currentData) {
   renderEnergyCurve(data, currentRows.length);
 }
 
-function renderTracklist() {
+function renderTracklist({ animate = false } = {}) {
   updateTrackRisks();
+  tracklist.classList.remove("is-revealed");
   tracklist.innerHTML = currentRows
     .map(
       (track, index) => `
-        <li class="track" data-row-index="${index}">
-          <button class="track__drag" type="button" draggable="true" aria-label="${escapeHtml(currentLang === "zh" ? "拖动排序" : "Drag to reorder")}" title="${escapeHtml(currentLang === "zh" ? "拖动排序" : "Drag to reorder")}">⋮⋮</button>
+        <li class="track" data-row-index="${index}" data-track-key="${escapeHtml(getTrackDomKey(track, index))}" style="--track-delay: ${Math.min(index * 54, 760)}ms">
+          <button class="track__drag" type="button" draggable="true" aria-label="${escapeHtml(currentLang === "zh" ? "拖动调整顺序" : "Drag to reorder")}" title="${escapeHtml(currentLang === "zh" ? "拖动调整顺序" : "Drag to reorder")}">↕</button>
           <div class="track__name">
             <strong>${escapeHtml(track.title)}</strong>
             <span>${escapeHtml(track.artist)}</span>
@@ -2524,6 +2601,11 @@ function renderTracklist() {
       `
     )
     .join("");
+  if (animate && currentRows.length) {
+    requestAnimationFrame(() => {
+      tracklist.classList.add("is-revealed");
+    });
+  }
   if (betaNote) betaNote.hidden = !currentRows.length;
   if (setRationale) setRationale.hidden = !currentRows.length;
   if (playbackTip) playbackTip.hidden = !currentRows.length;
@@ -2534,17 +2616,57 @@ function renderTracklist() {
   setExportEnabled(Boolean(currentRows.length));
 }
 
-function renderCurrentSet(data = currentData) {
+function getTrackDomKey(track, index) {
+  if (!track.domKey) {
+    trackDomKeyCounter += 1;
+    track.domKey = `track-${trackDomKeyCounter}-${normalizeNameForScore(`${track.title || ""}-${track.artist || ""}`) || index}`;
+  }
+  return track.domKey;
+}
+
+function animateTrackReorder(updateRows) {
+  const beforeRects = new Map(
+    Array.from(tracklist.querySelectorAll(".track")).map((row) => [
+      row.dataset.trackKey,
+      row.getBoundingClientRect()
+    ])
+  );
+
+  updateRows();
+
+  requestAnimationFrame(() => {
+    tracklist.querySelectorAll(".track").forEach((row) => {
+      const before = beforeRects.get(row.dataset.trackKey);
+      if (!before) return;
+      const after = row.getBoundingClientRect();
+      const deltaX = before.left - after.left;
+      const deltaY = before.top - after.top;
+      if (!deltaX && !deltaY) return;
+      row.animate(
+        [
+          { transform: `translate(${deltaX}px, ${deltaY}px)`, boxShadow: "0 16px 32px rgba(23, 24, 23, 0.12)" },
+          { transform: "translate(0, 0)", boxShadow: "0 0 0 rgba(23, 24, 23, 0)" }
+        ],
+        {
+          duration: 420,
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+        }
+      );
+    });
+  });
+}
+
+function renderCurrentSet(data = currentData, { animate = false } = {}) {
   setResultStage("generated");
   updateVisualTheme(data.genre, true);
   updateSetSummary(data);
-  renderTracklist();
+  renderTracklist({ animate });
 }
 
-function renderSet(data = getFormData()) {
+function renderSet(data = getFormData(), { animate = false } = {}) {
   currentRows = makeTrackRows(data);
   currentData = data;
-  renderCurrentSet(data);
+  renderCurrentSet(data, { animate });
 }
 
 form.addEventListener("submit", async (event) => {
@@ -2557,9 +2679,9 @@ form.addEventListener("submit", async (event) => {
   setStatus("optimized");
   showOutputLoading();
   renderInsight();
-  await sleep(700);
-  renderSet();
-  showOutputSuccess();
+  await sleep(920);
+  renderSet(getFormData(), { animate: true });
+  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true });
 });
 
 resetButton.addEventListener("click", () => {
@@ -2571,6 +2693,9 @@ resetButton.addEventListener("click", () => {
   parseFormat = "auto";
   uploadedPlaylistRawText = "";
   renderParsedPreview();
+  setInsightVisible(false);
+  setFlowSettingsVisible(false);
+  setAnalyzeButtonLabel();
   updateInputGate();
   const defaultData = {
     length: 45,
@@ -2593,6 +2718,8 @@ document.querySelectorAll("input, select, textarea").forEach((control) => {
     if (!hasMusicInput() && control !== musicInput) return;
     setStatus("draft");
     renderInsight();
+    setInsightVisible(hasPlaylistAnalysis);
+    setFlowSettingsVisible(hasPlaylistAnalysis);
     updateSetLengthWarning();
     if (control === musicInput) showEmptyOutput();
   });
@@ -2606,6 +2733,9 @@ musicInput.addEventListener("input", () => {
   uploadedPlaylistRawText = "";
   hasPlaylistAnalysis = false;
   renderParsedPreview();
+  setInsightVisible(false);
+  setFlowSettingsVisible(false);
+  setAnalyzeButtonLabel();
   updateInputGate();
   updateSetLengthWarning();
   showEmptyOutput();
@@ -2614,7 +2744,12 @@ musicInput.addEventListener("input", () => {
 analyzeButton.addEventListener("click", async () => {
   if (!hasMusicInput()) return;
   try {
+    isAnalyzing = true;
     setStatus("analyzed");
+    setAnalyzeButtonLabel("outputAnalyzeTitle");
+    updateInputGate();
+    setInsightVisible(false);
+    setFlowSettingsVisible(false);
     showOutputLoading("outputAnalyzeTitle", "outputAnalyzeCopy");
     const usedRealTrackData = await analyzePlaylistWithBackend();
     hasPlaylistAnalysis = usedRealTrackData;
@@ -2630,8 +2765,11 @@ analyzeButton.addEventListener("click", async () => {
       }
       return;
     }
-    await sleep(450);
+    await sleep(680);
     showOutputSuccess("outputAnalyzeSuccessTitle", "outputAnalyzeSuccessCopy");
+    setAnalyzeButtonLabel("outputAnalyzeSuccessTitle");
+    setInsightVisible(true, true);
+    setFlowSettingsVisible(true, true);
   } catch (error) {
     backendInsightProfile = null;
     sourceTracks = [];
@@ -2639,15 +2777,22 @@ analyzeButton.addEventListener("click", async () => {
     parseFormat = "auto";
     hasPlaylistAnalysis = false;
     renderParsedPreview();
+    setInsightVisible(false);
+    setFlowSettingsVisible(false);
     updateInputGate();
     renderInsight();
     updateSetLengthWarning();
     if (error?.name === "AbortError") {
       showOutputError("outputAnalyzeTimeoutTitle", "outputAnalyzeTimeoutCopy");
+      setAnalyzeButtonLabel("outputAnalyzeTimeoutTitle");
     } else {
       showOutputError();
+      setAnalyzeButtonLabel("outputAnalyzeErrorTitle");
     }
     console.warn(error);
+  } finally {
+    isAnalyzing = false;
+    updateInputGate();
   }
 });
 
@@ -2664,9 +2809,9 @@ surpriseButton.addEventListener("click", async () => {
   showOutputLoading();
   renderInsight(getFormData());
   updateSetLengthWarning();
-  await sleep(700);
-  renderSet(getFormData());
-  showOutputSuccess();
+  await sleep(920);
+  renderSet(getFormData(), { animate: true });
+  showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true });
 });
 
 useRecommendationButton.addEventListener("click", () => {
@@ -2734,9 +2879,11 @@ tracklist.addEventListener("click", (event) => {
 function moveCurrentTrack(fromIndex, toIndex) {
   if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex === toIndex) return;
   if (fromIndex < 0 || toIndex < 0 || fromIndex >= currentRows.length || toIndex >= currentRows.length) return;
-  const [moved] = currentRows.splice(fromIndex, 1);
-  currentRows.splice(toIndex, 0, moved);
-  renderCurrentSet(currentData);
+  animateTrackReorder(() => {
+    const [moved] = currentRows.splice(fromIndex, 1);
+    currentRows.splice(toIndex, 0, moved);
+    renderCurrentSet(currentData);
+  });
 }
 
 function getDetailedTracklistText() {
@@ -2804,6 +2951,9 @@ trackFile.addEventListener("change", async () => {
   parseFormat = "auto";
   hasPlaylistAnalysis = false;
   renderParsedPreview();
+  setInsightVisible(false);
+  setFlowSettingsVisible(false);
+  setAnalyzeButtonLabel();
   updateSetLengthWarning();
   updateInputGate();
   showEmptyOutput();
@@ -2855,9 +3005,11 @@ languageButtons.forEach((button) => {
       }
       updateStaticCopy();
       renderInsight(getFormData());
+      setInsightVisible(hasPlaylistAnalysis);
+      setFlowSettingsVisible(hasPlaylistAnalysis);
       if (currentRows.length) {
         renderCurrentSet(currentData);
-        showOutputSuccess();
+        setOutputState("hidden");
       } else {
         showEmptyOutput();
       }
@@ -2879,4 +3031,6 @@ renderInsight({
   dj: "",
   notes: ""
 });
+setInsightVisible(false);
+setFlowSettingsVisible(false);
 showEmptyOutput();

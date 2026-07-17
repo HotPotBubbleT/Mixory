@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=mixory-20260716-hide-clean-track-check" />
+    <link rel="stylesheet" href="styles.css?v=mixory-20260717-output-state-top" />
   </head>
   <body>
     <div class="page-background" aria-hidden="true">
@@ -158,9 +158,17 @@
               <span id="inputStatsLabel">Detected tracks</span>
               <strong id="inputStatsValue">0</strong>
             </div>
+            <div class="actions insight-actions insight-actions--top">
+              <button class="button button--primary" type="button" id="analyzeButton">Analyze tracks</button>
+            </div>
+            <div class="output-state output-state--mobile" id="mobileOutputState" aria-live="polite">
+              <div class="output-state__icon" id="mobileOutputStateIcon">?</div>
+              <strong id="mobileOutputStateTitle">Add tracks first</strong>
+              <p id="mobileOutputStateCopy">Add tracks, then analyze.</p>
+            </div>
           </section>
 
-          <section class="insight-card" aria-label="Playlist insight preview">
+          <section class="insight-card" id="insightCard" aria-label="Playlist insight preview" hidden>
             <div class="insight-card__header">
               <div>
               <p class="section-kicker" id="insightKicker">Music insight</p>
@@ -171,14 +179,6 @@
             <p class="insight-card__copy" id="insightCopy">
               Find genre balance, BPM range, and best-fit direction.
             </p>
-            <div class="actions insight-actions insight-actions--top">
-              <button class="button button--primary" type="button" id="analyzeButton">Analyze tracks</button>
-            </div>
-            <div class="output-state output-state--mobile" id="mobileOutputState" aria-live="polite">
-              <div class="output-state__icon" id="mobileOutputStateIcon">?</div>
-              <strong id="mobileOutputStateTitle">Add tracks first</strong>
-              <p id="mobileOutputStateCopy">Add tracks, then analyze.</p>
-            </div>
             <div class="genre-bars" id="genreBars"></div>
             <div class="insight-stats">
               <div>
@@ -221,94 +221,96 @@
             <div class="parsed-list" id="parsedTrackList"></div>
           </section>
 
-          <div class="control-grid">
-            <label class="field">
-              <span id="lengthLabel">Flow length</span>
-              <select id="setLength">
-                <option value="30">30 minutes</option>
-                <option value="45" selected>45 minutes</option>
-                <option value="60">1 hour</option>
-                <option value="90">1.5 hours</option>
-                <option value="120">2 hours</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span id="genreLabel">Main genre</span>
-              <select id="genre">
-                <optgroup label="House & groove">
-                  <option value="House">House</option>
-                  <option value="Deep house">Deep house</option>
-                  <option value="Melodic house">Melodic house</option>
-                  <option value="Progressive house">Progressive house</option>
-                  <option value="Bass house">Bass house</option>
-                  <option value="Afro house">Afro house</option>
-                  <option value="Disco">Disco</option>
-                </optgroup>
-                <optgroup label="Club & rave">
-                  <option value="Techno">Techno</option>
-                  <option value="Melodic techno">Melodic techno</option>
-                  <option value="Trance">Trance</option>
-                  <option value="UK garage">UK garage</option>
-                  <option value="Drum and bass">Drum and bass</option>
-                  <option value="Dubstep">Dubstep</option>
-                  <option value="Mainstage / Big room">Mainstage / Big room</option>
-                </optgroup>
-                <optgroup label="Chill & eclectic">
-                  <option value="Lo-fi">Lo-fi</option>
-                  <option value="Nu soul">Nu soul</option>
-                  <option value="Indie dance">Indie dance</option>
-                </optgroup>
-              </select>
-            </label>
-          </div>
-          <div class="set-warning" id="setLengthWarning" hidden></div>
-
-          <fieldset class="chips">
-            <legend id="vibeLegend">Theme / vibe</legend>
-            <label><input type="radio" name="vibe" value="Sunset" checked /><span>Sunset</span></label>
-            <label><input type="radio" name="vibe" value="Morning coffee" /><span>Morning coffee</span></label>
-            <label><input type="radio" name="vibe" value="After party" /><span>After party</span></label>
-            <label><input type="radio" name="vibe" value="Chill" /><span>Chill</span></label>
-            <label><input type="radio" name="vibe" value="Working" /><span>Working</span></label>
-            <label><input type="radio" name="vibe" value="Workout" /><span>Workout</span></label>
-            <label><input type="radio" name="vibe" value="Road trip" /><span>Road trip</span></label>
-            <label><input type="radio" name="vibe" value="Friday night" /><span>Friday night</span></label>
-            <label><input type="radio" name="vibe" value="Pre-game" /><span>Pre-game</span></label>
-            <label><input type="radio" name="vibe" value="Deep focus" /><span>Deep focus</span></label>
-          </fieldset>
-
-          <details class="advanced-options">
-            <summary>
-              <span id="advancedOptionsTitle">More specific requests</span>
-              <small id="advancedOptionsCopy">Optional: DJ reference, must-have tracks, or extra notes.</small>
-            </summary>
-
-            <div class="advanced-options__content">
+          <section class="flow-settings" id="flowSettings" aria-label="Flow settings" hidden>
+            <div class="control-grid">
               <label class="field">
-                <span id="djLabel">Favorite DJ or mood reference</span>
-                <input id="djReference" type="text" placeholder="Keinemusik, Peggy Gou, Fred again.., Ben Bohmer..." />
+                <span id="lengthLabel">Flow length</span>
+                <select id="setLength">
+                  <option value="30">30 minutes</option>
+                  <option value="45" selected>45 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="90">1.5 hours</option>
+                  <option value="120">2 hours</option>
+                </select>
               </label>
 
               <label class="field">
-                <span id="mustHaveLabel">Must-have tracks</span>
-                <textarea id="mustHaveTracks" rows="3" placeholder="Example: Lane 8 - Atlas&#10;Sultan + Shepard - Assassin"></textarea>
-                <small class="field-note" id="mustHaveNote">Mixory will try to include these tracks and place them where they transition best.</small>
-              </label>
-
-              <label class="field">
-                <span id="notesLabel">Extra notes</span>
-                <textarea id="notes" rows="4" placeholder="Example: soft intro, mid-set peak, dreamy outro."></textarea>
+                <span id="genreLabel">Main genre</span>
+                <select id="genre">
+                  <optgroup label="House & groove">
+                    <option value="House">House</option>
+                    <option value="Deep house">Deep house</option>
+                    <option value="Melodic house">Melodic house</option>
+                    <option value="Progressive house">Progressive house</option>
+                    <option value="Bass house">Bass house</option>
+                    <option value="Afro house">Afro house</option>
+                    <option value="Disco">Disco</option>
+                  </optgroup>
+                  <optgroup label="Club & rave">
+                    <option value="Techno">Techno</option>
+                    <option value="Melodic techno">Melodic techno</option>
+                    <option value="Trance">Trance</option>
+                    <option value="UK garage">UK garage</option>
+                    <option value="Drum and bass">Drum and bass</option>
+                    <option value="Dubstep">Dubstep</option>
+                    <option value="Mainstage / Big room">Mainstage / Big room</option>
+                  </optgroup>
+                  <optgroup label="Chill & eclectic">
+                    <option value="Lo-fi">Lo-fi</option>
+                    <option value="Nu soul">Nu soul</option>
+                    <option value="Indie dance">Indie dance</option>
+                  </optgroup>
+                </select>
               </label>
             </div>
-          </details>
+            <div class="set-warning" id="setLengthWarning" hidden></div>
 
-          <div class="actions">
-            <button class="button button--primary" type="button" id="surpriseButton">Surprise me</button>
-            <button class="button button--secondary" type="button" id="useRecommendationButton">Use recommended settings</button>
-            <button class="button button--primary" type="submit" id="generateButton">Generate flow</button>
-            <button class="button button--ghost" type="button" id="resetButton">Reset</button>
-          </div>
+            <fieldset class="chips">
+              <legend id="vibeLegend">Theme / vibe</legend>
+              <label><input type="radio" name="vibe" value="Sunset" checked /><span>Sunset</span></label>
+              <label><input type="radio" name="vibe" value="Morning coffee" /><span>Morning coffee</span></label>
+              <label><input type="radio" name="vibe" value="After party" /><span>After party</span></label>
+              <label><input type="radio" name="vibe" value="Chill" /><span>Chill</span></label>
+              <label><input type="radio" name="vibe" value="Working" /><span>Working</span></label>
+              <label><input type="radio" name="vibe" value="Workout" /><span>Workout</span></label>
+              <label><input type="radio" name="vibe" value="Road trip" /><span>Road trip</span></label>
+              <label><input type="radio" name="vibe" value="Friday night" /><span>Friday night</span></label>
+              <label><input type="radio" name="vibe" value="Pre-game" /><span>Pre-game</span></label>
+              <label><input type="radio" name="vibe" value="Deep focus" /><span>Deep focus</span></label>
+            </fieldset>
+
+            <details class="advanced-options">
+              <summary>
+                <span id="advancedOptionsTitle">More specific requests</span>
+                <small id="advancedOptionsCopy">Optional: DJ reference, must-have tracks, or extra notes.</small>
+              </summary>
+
+              <div class="advanced-options__content">
+                <label class="field">
+                  <span id="djLabel">Favorite DJ or mood reference</span>
+                  <input id="djReference" type="text" placeholder="Keinemusik, Peggy Gou, Fred again.., Ben Bohmer..." />
+                </label>
+
+                <label class="field">
+                  <span id="mustHaveLabel">Must-have tracks</span>
+                  <textarea id="mustHaveTracks" rows="3" placeholder="Example: Lane 8 - Atlas&#10;Sultan + Shepard - Assassin"></textarea>
+                  <small class="field-note" id="mustHaveNote">Mixory will try to include these tracks and place them where they transition best.</small>
+                </label>
+
+                <label class="field">
+                  <span id="notesLabel">Extra notes</span>
+                  <textarea id="notes" rows="4" placeholder="Example: soft intro, mid-set peak, dreamy outro."></textarea>
+                </label>
+              </div>
+            </details>
+
+            <div class="actions">
+              <button class="button button--primary" type="button" id="surpriseButton">Surprise me</button>
+              <button class="button button--secondary" type="button" id="useRecommendationButton">Use recommended settings</button>
+              <button class="button button--primary" type="submit" id="generateButton">Generate flow</button>
+              <button class="button button--ghost" type="button" id="resetButton">Reset</button>
+            </div>
+          </section>
         </form>
 
         <aside class="result result--compact" id="set-preview">
@@ -318,6 +320,12 @@
               <h2 id="resultTitle">Waiting for tracks</h2>
             </div>
             <span class="time-badge" id="timeBadge">--</span>
+          </div>
+
+          <div class="output-state" id="outputState">
+            <div class="output-state__icon" id="outputStateIcon">?</div>
+            <strong id="outputStateTitle">Add tracks first</strong>
+            <p id="outputStateCopy">Add tracks, then analyze.</p>
           </div>
 
           <div class="mix-summary">
@@ -363,12 +371,6 @@
             </div>
           </section>
 
-          <div class="output-state" id="outputState">
-            <div class="output-state__icon" id="outputStateIcon">?</div>
-            <strong id="outputStateTitle">Add tracks first</strong>
-            <p id="outputStateCopy">Add tracks, then analyze.</p>
-          </div>
-
           <div class="beta-note" id="betaNote" hidden>
             <strong id="betaNoteTitle">Review before playing</strong>
             <p id="betaNoteCopy">Draft flow. Adjust before playing.</p>
@@ -384,15 +386,6 @@
               <p class="set-rationale__reference" id="referenceArtistCopy">Reference: --</p>
             </div>
           </details>
-
-          <div class="playback-tip" id="playbackTip" hidden>
-            <strong id="playbackTipTitle">Try the DJ-style playback</strong>
-            <p id="playbackTipCopy">Create a playlist with this Mixory order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.</p>
-            <div class="playback-tip__links">
-              <a id="appleAutoMixLink" href="https://support.apple.com/en-us/105067" target="_blank" rel="noreferrer">Apple Music AutoMix</a>
-              <a id="spotifyMixLink" href="https://newsroom.spotify.com/2025-08-19/mix-your-favorite-playlists-seamlessly-by-adding-your-own-transitions/" target="_blank" rel="noreferrer">Spotify Mix</a>
-            </div>
-          </div>
 
           <div class="setlist-tools" id="setlistTools" hidden>
             <span id="reorderHint">Copy a title / artist to search one track, or export Simple TXT for the full set. Drag tracks to adjust the order; the curve updates.</span>
@@ -417,6 +410,14 @@
               </span>
             </div>
             <p class="export-bar__note" id="exportHelp">Simple for copying. Detailed includes BPM/key, energy, and risk.</p>
+            <div class="playback-tip" id="playbackTip" hidden>
+              <strong id="playbackTipTitle">Try the DJ-style playback</strong>
+              <p id="playbackTipCopy">Create a playlist with this Mixory order, then turn on Apple Music AutoMix or Spotify Mix to hear smoother DJ-style transitions.</p>
+              <div class="playback-tip__links">
+                <a id="appleAutoMixLink" href="https://support.apple.com/en-us/105067" target="_blank" rel="noreferrer">Apple Music AutoMix</a>
+                <a id="spotifyMixLink" href="https://newsroom.spotify.com/2025-08-19/mix-your-favorite-playlists-seamlessly-by-adding-your-own-transitions/" target="_blank" rel="noreferrer">Spotify Mix</a>
+              </div>
+            </div>
             <button class="button button--primary" type="button" id="copySimpleButton">Copy Simple List</button>
             <button class="button button--ghost" type="button" id="exportSimpleButton">Export Simple TXT</button>
             <button class="button button--secondary" type="button" id="exportDetailedButton">Export Detailed TXT</button>
@@ -434,6 +435,6 @@
       </footer>
     </main>
 
-    <script src="script.js?v=mixory-20260716-hide-clean-track-check"></script>
+    <script src="script.js?v=mixory-20260717-output-state-top"></script>
   </body>
 </html>
