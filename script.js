@@ -2179,7 +2179,8 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
     const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy, poolContext.length);
     const vocalPenalty = getFallbackVocalSpacingPenalty(sequence, candidate, strategy);
-    const tempoDirectionPenalty = strategy.stableBpm && tempoGap > 2.5 ? (tempoGap - 2.5) * 2.3 : 0;
+    const tempoTolerance = Number(strategy.bpmTolerance) || (strategy.stableBpm ? 5 : 8);
+    const tempoDirectionPenalty = strategy.stableBpm && tempoGap > tempoTolerance / 2 ? (tempoGap - tempoTolerance / 2) * 2.3 : 0;
     const weights = {
       tempo: (2.35 + referencePriority.tempo * 1.6) * strategy.weights.tempo,
       key: (1.05 + referencePriority.camelotKey * 2) * strategy.weights.key,
@@ -2260,40 +2261,206 @@ function getReferenceSmoothPriority() {
   };
 }
 
-function getSequencingStrategy(primaryGenre = currentData.genre) {
+const DEFAULT_SEQUENCING_STRATEGY = {
+  id: "house",
+  targetCurve: [36, 48, 62, 74, 66, 82, 70],
+  bpmTolerance: 8,
+  preferredResetInterval: [5, 6],
+  resetRole: "breathing moment",
+  resetDepth: 10,
+  resetFloor: 22,
+  resetCap: 58,
+  transitionWeights: {
+    bpm: 1,
+    key: 0.78,
+    energy: 1.08,
+    mood: 1,
+    vocalSpacing: 1,
+    reset: 1
+  },
+  rules: {
+    maxConsecutiveVocals: 2,
+    allowMidSetBpmDrop: true
+  }
+};
+
+const SEQUENCING_STRATEGIES = {
+  house: DEFAULT_SEQUENCING_STRATEGY,
+  "melodic-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "melodic-house",
+    targetCurve: [30, 42, 56, 70, 52, 76, 86, 64],
+    resetDepth: 13,
+    resetCap: 54,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, key: 1.08, energy: 1.12, reset: 1.28 }
+  },
+  "tech-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "tech-house",
+    targetCurve: [55, 62, 70, 82, 72, 84, 95, 88],
+    bpmTolerance: 5,
+    preferredResetInterval: [4, 5],
+    resetRole: "groove reset",
+    resetDepth: 7,
+    resetFloor: 52,
+    resetCap: 74,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.34, key: 0.58, energy: 1.12, mood: 1.15, vocalSpacing: 1.34, reset: 1.22 },
+    rules: { ...DEFAULT_SEQUENCING_STRATEGY.rules, maxConsecutiveVocals: 1, allowMidSetBpmDrop: false }
+  },
+  "progressive-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "progressive-house",
+    targetCurve: [35, 45, 58, 70, 82, 62, 75, 92, 68],
+    preferredResetInterval: [6, 7],
+    resetRole: "floating release",
+    resetDepth: 12,
+    resetCap: 60,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, key: 1.06, energy: 1.1, reset: 1.18 }
+  },
+  "organic-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "organic-house",
+    targetCurve: [25, 40, 55, 65, 78, 52, 68, 58],
+    resetRole: "natural breathing space",
+    resetDepth: 14,
+    resetFloor: 28,
+    resetCap: 56,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, energy: 1.2, mood: 1.12, reset: 1.28 }
+  },
+  "deep-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "deep-house",
+    targetCurve: [40, 52, 65, 50, 62, 72, 55, 70, 58],
+    resetRole: "deep reset",
+    resetDepth: 9,
+    resetFloor: 38,
+    resetCap: 58,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.1, energy: 1.18, mood: 1.12, reset: 1.18 }
+  },
+  "afro-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "afro-house",
+    targetCurve: [35, 50, 65, 72, 84, 66, 78, 94, 72],
+    bpmTolerance: 7,
+    resetRole: "percussion reset",
+    resetDepth: 9,
+    resetFloor: 48,
+    resetCap: 68,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.12, key: 0.62, mood: 1.12, reset: 1.2, vocalSpacing: 1.14 },
+    rules: { ...DEFAULT_SEQUENCING_STRATEGY.rules, maxConsecutiveVocals: 1 }
+  },
+  trance: {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "trance",
+    targetCurve: [35, 55, 72, 88, 52, 95, 75, 100, 70],
+    resetRole: "breakdown and release",
+    resetDepth: 17,
+    resetFloor: 34,
+    resetCap: 56,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, key: 1.22, reset: 1.32 }
+  },
+  "drum-and-bass": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "drum-and-bass",
+    targetCurve: [35, 52, 68, 88, 55, 72, 98, 65],
+    preferredResetInterval: [4, 5],
+    resetRole: "liquid release",
+    resetDepth: 16,
+    resetFloor: 40,
+    resetCap: 60,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.18, key: 0.52, energy: 1.16, mood: 1.16, reset: 1.26 }
+  },
+  "uk-garage": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "uk-garage",
+    targetCurve: [45, 56, 68, 72, 60, 78, 66],
+    preferredResetInterval: [4, 5],
+    resetRole: "shuffle reset",
+    resetDepth: 8,
+    resetFloor: 44,
+    resetCap: 66,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.18, key: 0.62, energy: 1.1, mood: 1.12, vocalSpacing: 1.16 }
+  },
+  "bass-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "bass-house",
+    targetCurve: [54, 68, 78, 92, 64, 88, 76],
+    bpmTolerance: 5,
+    preferredResetInterval: [4, 5],
+    resetRole: "bass reset",
+    resetDepth: 12,
+    resetFloor: 46,
+    resetCap: 66,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.2, key: 0.5, energy: 1.18, mood: 1.08, reset: 1.18 }
+  },
+  "lo-fi-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "lo-fi-house",
+    targetCurve: [24, 34, 44, 50, 40, 46, 32],
+    bpmTolerance: 10,
+    preferredResetInterval: [6, 7],
+    resetRole: "dusty reset",
+    resetDepth: 8,
+    resetFloor: 18,
+    resetCap: 46,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 0.86, key: 0.82, energy: 1.28, mood: 1.25, vocalSpacing: 0.9 }
+  },
+  "electro-house": {
+    ...DEFAULT_SEQUENCING_STRATEGY,
+    id: "electro-house",
+    targetCurve: [50, 64, 80, 92, 70, 94, 82],
+    bpmTolerance: 6,
+    preferredResetInterval: [4, 5],
+    resetRole: "synth reset",
+    resetDepth: 10,
+    resetFloor: 48,
+    resetCap: 70,
+    transitionWeights: { ...DEFAULT_SEQUENCING_STRATEGY.transitionWeights, bpm: 1.16, key: 0.58, energy: 1.16, mood: 1.08, reset: 1.18 }
+  }
+};
+
+function resolveSequencingStrategyKey(primaryGenre = "") {
   const text = normalizeNameForScore(primaryGenre).replace(/-/g, " ");
-  const key =
-    text.includes("tech house") ? "tech-house" :
-    text.includes("progressive") ? "progressive-house" :
-    text.includes("organic") ? "organic-house" :
-    text.includes("deep house") ? "deep-house" :
-    text.includes("afro") ? "afro-house" :
-    text.includes("trance") ? "trance" :
-    text.includes("drum and bass") || text.includes("dnb") ? "drum-and-bass" :
-    text.includes("melodic") ? "melodic-house" :
-    "house";
-  const shared = {
-    id: key,
-    energyCurve: [36, 48, 62, 74, 66, 82, 70],
-    releaseName: "breathing moment",
-    releaseEvery: 6,
-    releaseDepth: 10,
-    releaseFloor: 22,
-    releaseCap: 58,
-    stableBpm: false,
-    weights: { tempo: 1, key: 0.78, energy: 1.08, genre: 1, vocalSpacing: 1, release: 1 }
-  };
+  if (text.includes("tech house")) return "tech-house";
+  if (text.includes("progressive")) return "progressive-house";
+  if (text.includes("organic")) return "organic-house";
+  if (text.includes("deep house")) return "deep-house";
+  if (text.includes("afro")) return "afro-house";
+  if (text.includes("uk garage") || text.includes("garage")) return "uk-garage";
+  if (text.includes("bass house")) return "bass-house";
+  if (text.includes("lo fi house") || text.includes("lofi house")) return "lo-fi-house";
+  if (text.includes("electro house")) return "electro-house";
+  if (text.includes("trance")) return "trance";
+  if (text.includes("drum and bass") || text.includes("dnb")) return "drum-and-bass";
+  if (text.includes("melodic")) return "melodic-house";
+  return "house";
+}
+
+function makeSequencingStrategy(config = DEFAULT_SEQUENCING_STRATEGY) {
+  const weights = config.transitionWeights;
   return {
-    "melodic-house": { ...shared, energyCurve: [30, 42, 56, 70, 52, 76, 86, 64], releaseName: "breathing moment", releaseEvery: 6, releaseDepth: 13, releaseCap: 54, weights: { ...shared.weights, key: 1.08, energy: 1.12, release: 1.28 } },
-    "tech-house": { ...shared, energyCurve: [55, 62, 70, 82, 72, 84, 95, 88], releaseName: "groove reset", releaseEvery: 4, releaseDepth: 7, releaseFloor: 52, releaseCap: 74, stableBpm: true, weights: { ...shared.weights, tempo: 1.34, key: 0.58, energy: 1.12, genre: 1.15, vocalSpacing: 1.34, release: 1.22 } },
-    "progressive-house": { ...shared, energyCurve: [35, 45, 58, 70, 82, 62, 75, 92, 68], releaseName: "floating release", releaseEvery: 6, releaseDepth: 12, releaseCap: 60, weights: { ...shared.weights, key: 1.06, energy: 1.1, release: 1.18 } },
-    "organic-house": { ...shared, energyCurve: [25, 40, 55, 65, 78, 52, 68, 58], releaseName: "natural breathing space", releaseEvery: 5, releaseDepth: 14, releaseFloor: 28, releaseCap: 56, weights: { ...shared.weights, energy: 1.2, genre: 1.12, release: 1.28 } },
-    "deep-house": { ...shared, energyCurve: [40, 52, 65, 50, 62, 72, 55, 70, 58], releaseName: "deep reset", releaseEvery: 5, releaseDepth: 9, releaseFloor: 38, releaseCap: 58, weights: { ...shared.weights, tempo: 1.1, energy: 1.18, genre: 1.12, release: 1.18 } },
-    "afro-house": { ...shared, energyCurve: [35, 50, 65, 72, 84, 66, 78, 94, 72], releaseName: "percussion reset", releaseEvery: 5, releaseDepth: 9, releaseFloor: 48, releaseCap: 68, weights: { ...shared.weights, tempo: 1.12, key: 0.62, genre: 1.12, release: 1.2, vocalSpacing: 1.14 } },
-    trance: { ...shared, energyCurve: [35, 55, 72, 88, 52, 95, 75, 100, 70], releaseName: "breakdown and release", releaseEvery: 5, releaseDepth: 17, releaseFloor: 34, releaseCap: 56, weights: { ...shared.weights, key: 1.22, release: 1.32 } },
-    "drum-and-bass": { ...shared, energyCurve: [35, 52, 68, 88, 55, 72, 98, 65], releaseName: "liquid release", releaseEvery: 4, releaseDepth: 16, releaseFloor: 40, releaseCap: 60, weights: { ...shared.weights, tempo: 1.18, key: 0.52, energy: 1.16, genre: 1.16, release: 1.26 } },
-    house: shared
-  }[key] || shared;
+    ...config,
+    energyCurve: config.targetCurve,
+    releaseName: config.resetRole,
+    releaseEvery: Math.round((config.preferredResetInterval[0] + config.preferredResetInterval[1]) / 2),
+    releaseDepth: config.resetDepth,
+    releaseFloor: config.resetFloor,
+    releaseCap: config.resetCap,
+    stableBpm: !config.rules.allowMidSetBpmDrop,
+    weights: {
+      tempo: weights.bpm,
+      key: weights.key,
+      energy: weights.energy,
+      genre: weights.mood,
+      vocalSpacing: weights.vocalSpacing,
+      release: weights.reset
+    }
+  };
+}
+
+function getSequencingStrategy(primaryGenre = currentData.genre) {
+  const key = resolveSequencingStrategyKey(primaryGenre);
+  return makeSequencingStrategy(SEQUENCING_STRATEGIES[key] || DEFAULT_SEQUENCING_STRATEGY);
 }
 
 function getReferenceStartFit(track = {}, data = {}) {
@@ -2418,7 +2585,8 @@ function getBreathingMomentPenalty(previous = {}, candidate = {}, data = {}, nex
   if (strategy.releaseDepth >= 11 && energyMovement > -3) penalty += 10 + Math.max(0, energyMovement) * 0.45;
   if (strategy.releaseDepth < 11 && energyMovement < -18) penalty += 8;
   if (energyMovement < -24) penalty += 7;
-  if (tempoGap > (strategy.stableBpm ? 5 : 8)) penalty += (tempoGap - (strategy.stableBpm ? 5 : 8)) * 1.4;
+  const tolerance = Number(strategy.bpmTolerance) || (strategy.stableBpm ? 5 : 8);
+  if (tempoGap > tolerance) penalty += (tempoGap - tolerance) * 1.4;
   if (genrePenalty >= 12) penalty += 5;
   if (candidate.metadataEstimated) penalty += 2.5;
   penalty -= textureFit * 8;
@@ -2443,7 +2611,9 @@ function getBreathingTextureFit(track = {}, data = {}) {
 function getFallbackVocalSpacingPenalty(sequence = [], candidate = {}, strategy = getSequencingStrategy()) {
   const vocalPattern = /feat|featuring|ft\.|vocal|love|you|me|heart|tonight|eyes|feel|dream|sing|chant/;
   if (!vocalPattern.test(normalizeNameForScore(`${candidate.title || ""} ${candidate.artist || ""}`))) return 0;
-  const recentVocals = sequence.slice(-2).filter((track) => vocalPattern.test(normalizeNameForScore(`${track.title || ""} ${track.artist || ""}`))).length;
+  const maxVocals = Number(strategy.rules?.maxConsecutiveVocals) || 2;
+  const recentVocals = sequence.slice(-maxVocals).filter((track) => vocalPattern.test(normalizeNameForScore(`${track.title || ""} ${track.artist || ""}`))).length;
+  if (recentVocals < maxVocals) return recentVocals * 2.5;
   return recentVocals * (strategy.id === "tech-house" || strategy.id === "afro-house" ? 7 : 5);
 }
 
