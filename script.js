@@ -814,8 +814,10 @@ const vibeProfiles = {
 
 const genreModifiers = {
   House: ["Deep house opener", "groove-forward transition", "piano-house lift"],
+  "Tech house": ["groove-forward transition", "groove reset", "impact drop switch"],
   "Deep house": ["deep groove opener", "subtle percussion layer", "late-night bass handoff"],
   "Melodic house": ["warm melodic blend", "sunrise chord lift", "emotional phrase handoff"],
+  "Organic house": ["organic percussion blend", "natural breathing space", "warm chord transition"],
   "Bass house": ["bassline pressure swap", "short drop tease", "club bounce reset"],
   Disco: ["disco bass bridge", "funky phrase blend", "mirrorball groove lift"],
   Trance: ["euphoric breakdown", "long harmonic blend", "arpeggio peak"],
@@ -925,7 +927,14 @@ const transitionLabels = {
     "double-time energy jump": "双倍速能量跳转",
     "breakbeat switch": "breakbeat 切换",
     "bass recoil": "低频回弹",
-    "breathing moment": "呼吸点"
+    "breathing moment": "呼吸点",
+    "groove reset": "Groove Reset",
+    "floating release": "Floating Release",
+    "natural breathing space": "自然呼吸点",
+    "deep reset": "Deep Reset",
+    "percussion reset": "打击乐 Reset",
+    "breakdown and release": "Breakdown 释放",
+    "liquid release": "Liquid Release"
   }
 };
 
@@ -1978,9 +1987,9 @@ function makeTrackRows(data) {
 
   return Array.from({ length: desiredTracks }, (_, index) => {
     const source = sequence[index % sequence.length];
-    const isBreathingMoment = isBreathingMomentIndex(index, desiredTracks, data);
-    const transition = isBreathingMoment
-      ? "breathing moment"
+    const releaseKey = getReleaseTransitionKey(data, index, desiredTracks);
+    const transition = releaseKey
+      ? releaseKey
       : index % 3 === 0
         ? genreNotes[index % genreNotes.length]
         : profile.transitions[index % profile.transitions.length];
@@ -2155,6 +2164,7 @@ function findBestStartTrackIndex(tracks, data) {
 function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode = "smoothest", sequence = [], poolContext = []) {
   const preference = getPreferenceProfile(data);
   const referencePriority = getReferenceSmoothPriority();
+  const strategy = getSequencingStrategy(data.genre);
   let bestIndex = 0;
   let bestScore = Infinity;
   candidates.forEach((candidate, index) => {
@@ -2167,19 +2177,23 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
     const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
     const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
-    const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy);
+    const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy, poolContext.length);
+    const vocalPenalty = getFallbackVocalSpacingPenalty(sequence, candidate, strategy);
+    const tempoDirectionPenalty = strategy.stableBpm && tempoGap > 2.5 ? (tempoGap - 2.5) * 2.3 : 0;
     const weights = {
-      tempo: 2.35 + referencePriority.tempo * 1.6,
-      key: 1.05 + referencePriority.camelotKey * 2,
-      energy: 1.05 + referencePriority.energyCurve * 1.4,
-      genre: 1.25 + referencePriority.genreTexture * 1.9
+      tempo: (2.35 + referencePriority.tempo * 1.6) * strategy.weights.tempo,
+      key: (1.05 + referencePriority.camelotKey * 2) * strategy.weights.key,
+      energy: (1.05 + referencePriority.energyCurve * 1.4) * strategy.weights.energy,
+      genre: (1.25 + referencePriority.genreTexture * 1.9) * strategy.weights.genre
     };
     const score = tempoGap * weights.tempo * preference.tempoWeight
+      + tempoDirectionPenalty
       + keyGap * weights.key * preference.keyWeight * keyConfidence
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight
       + referencePatternPenalty * referencePriority.referencePattern
-      + breathingPenalty * preference.breathingMomentWeight
+      + breathingPenalty * Math.max(preference.breathingMomentWeight, strategy.weights.release)
+      + vocalPenalty * strategy.weights.vocalSpacing
       + artistRepeatPenalty * preference.artistRepeatWeight
       - djAffinity * preference.djReferenceWeight
       - mustHaveAffinity * preference.mustHaveWeight;
@@ -2244,6 +2258,42 @@ function getReferenceSmoothPriority() {
     camelotKey: Number(priority.camelotKey) || 0.16,
     referencePattern: Number(priority.referencePattern) || 0.05
   };
+}
+
+function getSequencingStrategy(primaryGenre = currentData.genre) {
+  const text = normalizeNameForScore(primaryGenre).replace(/-/g, " ");
+  const key =
+    text.includes("tech house") ? "tech-house" :
+    text.includes("progressive") ? "progressive-house" :
+    text.includes("organic") ? "organic-house" :
+    text.includes("deep house") ? "deep-house" :
+    text.includes("afro") ? "afro-house" :
+    text.includes("trance") ? "trance" :
+    text.includes("drum and bass") || text.includes("dnb") ? "drum-and-bass" :
+    text.includes("melodic") ? "melodic-house" :
+    "house";
+  const shared = {
+    id: key,
+    energyCurve: [36, 48, 62, 74, 66, 82, 70],
+    releaseName: "breathing moment",
+    releaseEvery: 6,
+    releaseDepth: 10,
+    releaseFloor: 22,
+    releaseCap: 58,
+    stableBpm: false,
+    weights: { tempo: 1, key: 0.78, energy: 1.08, genre: 1, vocalSpacing: 1, release: 1 }
+  };
+  return {
+    "melodic-house": { ...shared, energyCurve: [30, 42, 56, 70, 52, 76, 86, 64], releaseName: "breathing moment", releaseEvery: 6, releaseDepth: 13, releaseCap: 54, weights: { ...shared.weights, key: 1.08, energy: 1.12, release: 1.28 } },
+    "tech-house": { ...shared, energyCurve: [55, 62, 70, 82, 72, 84, 95, 88], releaseName: "groove reset", releaseEvery: 4, releaseDepth: 7, releaseFloor: 52, releaseCap: 74, stableBpm: true, weights: { ...shared.weights, tempo: 1.34, key: 0.58, energy: 1.12, genre: 1.15, vocalSpacing: 1.34, release: 1.22 } },
+    "progressive-house": { ...shared, energyCurve: [35, 45, 58, 70, 82, 62, 75, 92, 68], releaseName: "floating release", releaseEvery: 6, releaseDepth: 12, releaseCap: 60, weights: { ...shared.weights, key: 1.06, energy: 1.1, release: 1.18 } },
+    "organic-house": { ...shared, energyCurve: [25, 40, 55, 65, 78, 52, 68, 58], releaseName: "natural breathing space", releaseEvery: 5, releaseDepth: 14, releaseFloor: 28, releaseCap: 56, weights: { ...shared.weights, energy: 1.2, genre: 1.12, release: 1.28 } },
+    "deep-house": { ...shared, energyCurve: [40, 52, 65, 50, 62, 72, 55, 70, 58], releaseName: "deep reset", releaseEvery: 5, releaseDepth: 9, releaseFloor: 38, releaseCap: 58, weights: { ...shared.weights, tempo: 1.1, energy: 1.18, genre: 1.12, release: 1.18 } },
+    "afro-house": { ...shared, energyCurve: [35, 50, 65, 72, 84, 66, 78, 94, 72], releaseName: "percussion reset", releaseEvery: 5, releaseDepth: 9, releaseFloor: 48, releaseCap: 68, weights: { ...shared.weights, tempo: 1.12, key: 0.62, genre: 1.12, release: 1.2, vocalSpacing: 1.14 } },
+    trance: { ...shared, energyCurve: [35, 55, 72, 88, 52, 95, 75, 100, 70], releaseName: "breakdown and release", releaseEvery: 5, releaseDepth: 17, releaseFloor: 34, releaseCap: 56, weights: { ...shared.weights, key: 1.22, release: 1.32 } },
+    "drum-and-bass": { ...shared, energyCurve: [35, 52, 68, 88, 55, 72, 98, 65], releaseName: "liquid release", releaseEvery: 4, releaseDepth: 16, releaseFloor: 40, releaseCap: 60, weights: { ...shared.weights, tempo: 1.18, key: 0.52, energy: 1.16, genre: 1.16, release: 1.26 } },
+    house: shared
+  }[key] || shared;
 }
 
 function getReferenceStartFit(track = {}, data = {}) {
@@ -2324,10 +2374,16 @@ function isBreathingMomentContext(data = {}) {
 }
 
 function getBreathingMomentIndexes(count = 0, data = {}) {
-  if (!isBreathingMomentContext(data) || count < 8) return [];
+  return getReleaseMomentIndexes(count, data).filter((index) => getReleaseTransitionKey(data, index, count) === "breathing moment");
+}
+
+function getReleaseMomentIndexes(count = 0, data = {}) {
+  const strategy = getSequencingStrategy(data.genre);
+  if (count < 8) return [];
+  if (strategy.releaseName === "breathing moment" && !isBreathingMomentContext(data)) return [];
   const indexes = [];
-  const interval = 6;
-  let next = count <= 10 ? Math.floor(count / 2) : 5;
+  const interval = Math.max(4, Number(strategy.releaseEvery) || 6);
+  let next = count <= 10 ? Math.floor(count / 2) : Math.min(interval, Math.floor(count * 0.45));
   next = Math.max(4, Math.min(count - 3, next));
 
   while (next <= count - 3) {
@@ -2339,11 +2395,16 @@ function getBreathingMomentIndexes(count = 0, data = {}) {
 }
 
 function isBreathingMomentIndex(index, count, data = currentData) {
-  return getBreathingMomentIndexes(count, data).includes(index);
+  return getReleaseMomentIndexes(count, data).includes(index);
 }
 
-function getBreathingMomentPenalty(previous = {}, candidate = {}, data = {}, nextIndex = 0, targetEnergy = 50) {
-  const count = Math.max(sourceTracks.length || 0, getDesiredTrackCount(data.length || 45));
+function getReleaseTransitionKey(data = {}, index = 0, count = 0) {
+  const strategy = getSequencingStrategy(data.genre);
+  return getReleaseMomentIndexes(count, data).includes(index) ? strategy.releaseName : "";
+}
+
+function getBreathingMomentPenalty(previous = {}, candidate = {}, data = {}, nextIndex = 0, targetEnergy = 50, count = Math.max(sourceTracks.length || 0, getDesiredTrackCount(data.length || 45))) {
+  const strategy = getSequencingStrategy(data.genre);
   if (!isBreathingMomentIndex(nextIndex, count, data)) return 0;
 
   const candidateEnergy = estimateTrackMixEnergy(candidate, data);
@@ -2354,9 +2415,10 @@ function getBreathingMomentPenalty(previous = {}, candidate = {}, data = {}, nex
   const textureFit = getBreathingTextureFit(candidate, data);
   let penalty = Math.abs(candidateEnergy - targetEnergy) * 1.05;
 
-  if (energyMovement > -3) penalty += 10 + Math.max(0, energyMovement) * 0.45;
+  if (strategy.releaseDepth >= 11 && energyMovement > -3) penalty += 10 + Math.max(0, energyMovement) * 0.45;
+  if (strategy.releaseDepth < 11 && energyMovement < -18) penalty += 8;
   if (energyMovement < -24) penalty += 7;
-  if (tempoGap > 8) penalty += (tempoGap - 8) * 1.4;
+  if (tempoGap > (strategy.stableBpm ? 5 : 8)) penalty += (tempoGap - (strategy.stableBpm ? 5 : 8)) * 1.4;
   if (genrePenalty >= 12) penalty += 5;
   if (candidate.metadataEstimated) penalty += 2.5;
   penalty -= textureFit * 8;
@@ -2376,6 +2438,13 @@ function getBreathingTextureFit(track = {}, data = {}) {
   if (/mainstage|big room|dubstep|drum and bass|dnb|bass|rave|festival|drop|hard/.test(text)) score -= 0.35;
 
   return Math.max(0, Math.min(1, score));
+}
+
+function getFallbackVocalSpacingPenalty(sequence = [], candidate = {}, strategy = getSequencingStrategy()) {
+  const vocalPattern = /feat|featuring|ft\.|vocal|love|you|me|heart|tonight|eyes|feel|dream|sing|chant/;
+  if (!vocalPattern.test(normalizeNameForScore(`${candidate.title || ""} ${candidate.artist || ""}`))) return 0;
+  const recentVocals = sequence.slice(-2).filter((track) => vocalPattern.test(normalizeNameForScore(`${track.title || ""} ${track.artist || ""}`))).length;
+  return recentVocals * (strategy.id === "tech-house" || strategy.id === "afro-house" ? 7 : 5);
 }
 
 function isSamePrimaryArtist(left = "", right = "") {
@@ -2552,11 +2621,10 @@ function resetEnergyCurve() {
   energyCurvePeak.textContent = t("energyCurvePeak");
 }
 
-function makeEnergyValues(vibe, count) {
+function makeEnergyValues(vibe, count, data = currentData) {
+  const strategy = getSequencingStrategy(data.genre);
   const referencePattern = getReferencePattern();
-  const anchors = Array.isArray(referencePattern?.energyCurve) && referencePattern.energyCurve.length >= 3
-    ? referencePattern.energyCurve
-    : {
+  const vibeAnchors = {
     Sunset: [34, 46, 62, 78, 86, 68],
     "Morning coffee": [18, 28, 38, 44, 36, 24],
     "After party": [52, 62, 78, 84, 74, 58],
@@ -2568,6 +2636,10 @@ function makeEnergyValues(vibe, count) {
     "Pre-game": [42, 58, 72, 84, 88, 70],
     "Deep focus": [24, 32, 40, 46, 42, 30]
   }[vibe] ?? [32, 45, 58, 72, 66, 45];
+  const referenceAnchors = Array.isArray(referencePattern?.energyCurve) && referencePattern.energyCurve.length >= 3
+    ? referencePattern.energyCurve
+    : null;
+  const anchors = blendEnergyAnchors(strategy.energyCurve, vibeAnchors, referenceAnchors);
 
   return Array.from({ length: count }, (_, index) => {
     const position = count === 1 ? 0 : index / (count - 1);
@@ -2582,7 +2654,7 @@ function makeEnergyValues(vibe, count) {
 }
 
 function makeVersionEnergyValues(vibe, count, mode = "smoothest", data = currentData) {
-  const values = makeEnergyValues(vibe, count);
+  const values = makeEnergyValues(vibe, count, data);
   const preference = getPreferenceProfile(data);
   const shapedValues = values.map((value, index) => {
     const position = values.length === 1 ? 0 : index / (values.length - 1);
@@ -2594,15 +2666,36 @@ function makeVersionEnergyValues(vibe, count, mode = "smoothest", data = current
   return applyBreathingEnergyDips(shapedValues, data);
 }
 
+function blendEnergyAnchors(baseAnchors = [], vibeAnchors = [], referenceAnchors = null) {
+  const length = Math.max(baseAnchors.length, vibeAnchors.length, referenceAnchors?.length || 0, 3);
+  const sample = (anchors, index) => {
+    if (!anchors?.length) return 50;
+    const position = length === 1 ? 0 : index / (length - 1);
+    const scaled = position * (anchors.length - 1);
+    const left = Math.floor(scaled);
+    const right = Math.min(anchors.length - 1, left + 1);
+    const progress = scaled - left;
+    return anchors[left] + (anchors[right] - anchors[left]) * progress;
+  };
+  return Array.from({ length }, (_, index) => {
+    const base = sample(baseAnchors, index);
+    const vibe = sample(vibeAnchors, index);
+    const reference = referenceAnchors ? sample(referenceAnchors, index) : base;
+    return Math.round(Math.max(8, Math.min(98, base * 0.58 + vibe * 0.24 + reference * (referenceAnchors ? 0.18 : 0))));
+  });
+}
+
 function applyBreathingEnergyDips(values = [], data = {}) {
-  const indexes = getBreathingMomentIndexes(values.length, data);
+  const indexes = getReleaseMomentIndexes(values.length, data);
   if (!indexes.length) return values;
 
+  const strategy = getSequencingStrategy(data.genre);
   const shaped = [...values];
   indexes.forEach((index) => {
     const previous = shaped[index - 1] ?? shaped[index];
-    const softerTarget = Math.min(shaped[index] - 11, previous - 8, 56);
-    shaped[index] = Math.round(Math.max(20, softerTarget));
+    const drop = strategy.releaseDepth ?? 10;
+    const softerTarget = Math.min(shaped[index] - drop, previous - Math.max(4, drop - 3), strategy.releaseCap ?? 56);
+    shaped[index] = Math.round(Math.max(strategy.releaseFloor ?? 20, softerTarget));
 
     if (index + 1 < shaped.length && shaped[index + 1] < shaped[index] + 6) {
       shaped[index + 1] = Math.min(98, shaped[index] + 6);
