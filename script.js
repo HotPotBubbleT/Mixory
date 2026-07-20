@@ -1646,7 +1646,7 @@ function applyParseFormat(format = parseFormat) {
   renderParsedPreview();
   renderInsight();
   updateSetLengthWarning();
-  if (currentRows.length) renderSet(currentData);
+  if (currentRows.length) void renderSet(currentData);
   updateFormatButtons();
 }
 
@@ -1681,7 +1681,7 @@ function swapParsedTrack(index) {
   renderParsedPreview();
   renderInsight();
   updateSetLengthWarning();
-  if (currentRows.length) renderSet(currentData);
+  if (currentRows.length) void renderSet(currentData);
 }
 
 function updateFormatButtons() {
@@ -2000,6 +2000,56 @@ function makeTrackRows(data) {
       risk: null
     };
   });
+}
+
+async function makeTrackRowsRemoteFirst(data) {
+  const sourcePool = getSourceTrackPool();
+  if (!shouldUseBackend() || !sourceTracks.length || sourcePool.length < 2) return makeTrackRows(data);
+
+  const tracks = sourcePool.slice(0, 500).map((track) => ({
+    title: track.title,
+    artist: track.artist,
+    meta: track.meta,
+    tempo: track.tempo,
+    camelotKey: track.camelotKey,
+    genre: track.genre,
+    durationMinutes: track.durationMinutes,
+    metadataEstimated: track.metadataEstimated,
+    sourceIndex: track.sourceIndex
+  }));
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/flow/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data,
+        tracks,
+        profile: backendInsightProfile
+      })
+    });
+    const payload = await response.json();
+    if (!response.ok || !Array.isArray(payload.rows) || !payload.rows.length) {
+      throw new Error(payload.error || "Backend flow generation failed.");
+    }
+    return payload.rows.map((row, index) => ({
+      id: row.id || `${row.title}-${row.artist}-${index}`,
+      title: row.title || `Track ${index + 1}`,
+      artist: row.artist || (currentLang === "zh" ? "未知艺人" : "Unknown artist"),
+      meta: row.meta || `${row.tempo || estimateBpmForTrack(data, index)} BPM / ${row.camelotKey || estimateKeyForTrack(index)}`,
+      transitionKey: row.transitionKey || row.transition || "melodic handoff",
+      transition: row.transition || row.transitionKey || "melodic handoff",
+      energy: Number(row.energy) || 50,
+      tempo: Number(row.tempo) || estimateBpmForTrack(data, index),
+      camelotKey: normalizeCamelotKey(row.camelotKey) || estimateKeyForTrack(index),
+      genre: row.genre || data.genre,
+      metadataEstimated: Boolean(row.metadataEstimated),
+      risk: null
+    }));
+  } catch (error) {
+    console.warn("Backend flow generation failed; using local fallback.", error);
+    return makeTrackRows(data);
+  }
 }
 
 function selectCandidateSourcePool(sourcePool, data, desiredTracks) {
@@ -2774,8 +2824,8 @@ function renderCurrentSet(data = currentData, { animate = false } = {}) {
   renderTracklist({ animate });
 }
 
-function renderSet(data = getFormData(), { animate = false } = {}) {
-  currentRows = makeTrackRows(data);
+async function renderSet(data = getFormData(), { animate = false } = {}) {
+  currentRows = await makeTrackRowsRemoteFirst(data);
   currentData = data;
   renderCurrentSet(data, { animate });
 }
@@ -2791,7 +2841,7 @@ form.addEventListener("submit", async (event) => {
   showOutputLoading("outputGenerateTitle", "outputGenerateCopy", { mobilePlacement: "flow" });
   renderInsight();
   await sleep(920);
-  renderSet(getFormData(), { animate: true });
+  await renderSet(getFormData(), { animate: true });
   showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true, mobilePlacement: "flow" });
 });
 
@@ -2921,7 +2971,7 @@ surpriseButton.addEventListener("click", async () => {
   renderInsight(getFormData());
   updateSetLengthWarning();
   await sleep(920);
-  renderSet(getFormData(), { animate: true });
+  await renderSet(getFormData(), { animate: true });
   showOutputSuccess("outputGenerateSuccessTitle", "outputGenerateSuccessCopy", { autoHide: true, mobilePlacement: "flow" });
 });
 
