@@ -924,7 +924,8 @@ const transitionLabels = {
     "organic percussion blend": "有机打击乐混合",
     "double-time energy jump": "双倍速能量跳转",
     "breakbeat switch": "breakbeat 切换",
-    "bass recoil": "低频回弹"
+    "bass recoil": "低频回弹",
+    "breathing moment": "呼吸点"
   }
 };
 
@@ -1977,7 +1978,12 @@ function makeTrackRows(data) {
 
   return Array.from({ length: desiredTracks }, (_, index) => {
     const source = sequence[index % sequence.length];
-    const transition = index % 3 === 0 ? genreNotes[index % genreNotes.length] : profile.transitions[index % profile.transitions.length];
+    const isBreathingMoment = isBreathingMomentIndex(index, desiredTracks, data);
+    const transition = isBreathingMoment
+      ? "breathing moment"
+      : index % 3 === 0
+        ? genreNotes[index % genreNotes.length]
+        : profile.transitions[index % profile.transitions.length];
     const djHint = data.dj ? (currentLang === "zh" ? `，参考 ${data.dj} 的情绪` : `, shaped toward ${data.dj}`) : "";
     return {
       id: `${source.title}-${source.artist}-${index}`,
@@ -2111,6 +2117,7 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
     const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
     const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
     const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
+    const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy);
     const weights = {
       tempo: 2.35 + referencePriority.tempo * 1.6,
       key: 1.05 + referencePriority.camelotKey * 2,
@@ -2122,6 +2129,7 @@ function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode =
       + energyGap * weights.energy * preference.energyWeight
       + genrePenalty * weights.genre * preference.genreWeight
       + referencePatternPenalty * referencePriority.referencePattern
+      + breathingPenalty * preference.breathingMomentWeight
       + artistRepeatPenalty * preference.artistRepeatWeight
       - djAffinity * preference.djReferenceWeight
       - mustHaveAffinity * preference.mustHaveWeight;
@@ -2257,6 +2265,67 @@ function getArtistRepeatPenalty(sequence = [], candidate = {}, data = {}, poolCo
   if (isPreferred) penalty *= 0.38;
 
   return penalty;
+}
+
+function isBreathingMomentContext(data = {}) {
+  const text = normalizeNameForScore(`${data.vibe || ""} ${data.genre || ""} ${data.dj || ""} ${data.notes || ""}`);
+  if (/workout|rave|mainstage|big room|dubstep|drum and bass|dnb|hard|peak|festival/.test(text)) return false;
+  return /melodic|progressive|organic|afro|deep|sunset|focus|road|chill|lane 8|ben bohmer|ben böhmer|marsh|nora en pure|sultan|shepard|shepherd|yotto|anjuna|tinlicker|jerro|le youth/.test(text);
+}
+
+function getBreathingMomentIndexes(count = 0, data = {}) {
+  if (!isBreathingMomentContext(data) || count < 8) return [];
+  const indexes = [];
+  const interval = 6;
+  let next = count <= 10 ? Math.floor(count / 2) : 5;
+  next = Math.max(4, Math.min(count - 3, next));
+
+  while (next <= count - 3) {
+    indexes.push(next);
+    next += interval;
+  }
+
+  return indexes;
+}
+
+function isBreathingMomentIndex(index, count, data = currentData) {
+  return getBreathingMomentIndexes(count, data).includes(index);
+}
+
+function getBreathingMomentPenalty(previous = {}, candidate = {}, data = {}, nextIndex = 0, targetEnergy = 50) {
+  const count = Math.max(sourceTracks.length || 0, getDesiredTrackCount(data.length || 45));
+  if (!isBreathingMomentIndex(nextIndex, count, data)) return 0;
+
+  const candidateEnergy = estimateTrackMixEnergy(candidate, data);
+  const previousEnergy = estimateTrackMixEnergy(previous, data);
+  const energyMovement = candidateEnergy - previousEnergy;
+  const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
+  const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
+  const textureFit = getBreathingTextureFit(candidate, data);
+  let penalty = Math.abs(candidateEnergy - targetEnergy) * 1.05;
+
+  if (energyMovement > -3) penalty += 10 + Math.max(0, energyMovement) * 0.45;
+  if (energyMovement < -24) penalty += 7;
+  if (tempoGap > 8) penalty += (tempoGap - 8) * 1.4;
+  if (genrePenalty >= 12) penalty += 5;
+  if (candidate.metadataEstimated) penalty += 2.5;
+  penalty -= textureFit * 8;
+
+  return Math.max(-5, penalty);
+}
+
+function getBreathingTextureFit(track = {}, data = {}) {
+  const text = normalizeNameForScore(`${track.title || ""} ${track.artist || ""} ${track.genre || data.genre || ""}`);
+  const family = getGenreFamily(track.genre || data.genre || "");
+  let score = 0;
+
+  if (family === "deep-melodic") score += 0.75;
+  if (family === "chill-soul") score += 0.55;
+  if (family === "house-groove") score += 0.25;
+  if (/melodic|progressive|organic|deep|afro|ambient|chill|sunset|dub|vocal|piano|dream|night|love|lost|float|slow|warm/.test(text)) score += 0.35;
+  if (/mainstage|big room|dubstep|drum and bass|dnb|bass|rave|festival|drop|hard/.test(text)) score -= 0.35;
+
+  return Math.max(0, Math.min(1, score));
 }
 
 function isSamePrimaryArtist(left = "", right = "") {
@@ -2472,7 +2541,25 @@ function makeVersionEnergyValues(vibe, count, mode = "smoothest", data = current
     const middleLift = Math.sin(position * Math.PI) * preference.midLift;
     return Math.round(Math.max(8, Math.min(98, value + preference.energyBias + softIntro + softOutro + middleLift)));
   });
-  return shapedValues;
+  return applyBreathingEnergyDips(shapedValues, data);
+}
+
+function applyBreathingEnergyDips(values = [], data = {}) {
+  const indexes = getBreathingMomentIndexes(values.length, data);
+  if (!indexes.length) return values;
+
+  const shaped = [...values];
+  indexes.forEach((index) => {
+    const previous = shaped[index - 1] ?? shaped[index];
+    const softerTarget = Math.min(shaped[index] - 11, previous - 8, 56);
+    shaped[index] = Math.round(Math.max(20, softerTarget));
+
+    if (index + 1 < shaped.length && shaped[index + 1] < shaped[index] + 6) {
+      shaped[index + 1] = Math.min(98, shaped[index] + 6);
+    }
+  });
+
+  return shaped;
 }
 
 function getPreferenceProfile(data = {}) {
@@ -2497,6 +2584,7 @@ function getPreferenceProfile(data = {}) {
     movementWeight: isSmooth ? 0.8 : 1,
     djReferenceWeight: 2.65,
     mustHaveWeight: 3.8,
+    breathingMomentWeight: isBreathingMomentContext(data) ? 1.15 : 0,
     artistRepeatWeight: 1
   };
 }
@@ -2552,12 +2640,17 @@ function makeSetRationale(data = currentData) {
         .join(currentLang === "zh" ? "、" : " and ")
     : "";
   const bpm = formatBpmRange(referencePattern?.bpmRange ?? profile.bpmRange);
+  const breathingText = isBreathingMomentContext(data)
+    ? currentLang === "zh"
+      ? "，并在约 20-30 分钟附近留出呼吸点"
+      : ", with breathing moments around each 20-30 minute stretch"
+    : "";
 
   if (currentLang === "zh") {
-    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、能量和曲风更连贯；Camelot 调性和相近 reference set 作为辅助，让 Apple Music AutoMix / Spotify Mix 播放起来更自然。`;
+    return `Mixory 基于 ${topGenres || getGenreLabel(profile.recommendedGenre)}、${bpm}，优先让相邻歌曲的 BPM、能量和曲风更连贯${breathingText}；Camelot 调性和相近 reference set 作为辅助，让 Apple Music AutoMix / Spotify Mix 播放起来更自然。`;
   }
 
-  return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, energy, and genre continuity. Camelot key and similar reference-set patterns are used as soft guides for smoother Apple Music AutoMix / Spotify Mix playback.`;
+  return `Mixory builds this flow around ${topGenres || getGenreLabel(profile.recommendedGenre)} and a ${bpm} arc, prioritizing BPM, energy, and genre continuity${breathingText}. Camelot key and similar reference-set patterns are used as soft guides for smoother Apple Music AutoMix / Spotify Mix playback.`;
 }
 
 function makeReferenceArtistText() {
