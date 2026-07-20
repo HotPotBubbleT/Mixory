@@ -1034,12 +1034,10 @@ h1 {
 }
 
 @media (min-width: 901px) {
-  body.is-set-generated .workspace {
-    align-items: stretch;
-  }
-
   body.is-set-generated .builder {
-    align-self: stretch;
+    position: sticky;
+    bottom: 18px;
+    align-self: end;
   }
 
   body.is-set-generated .result {
