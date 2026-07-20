@@ -1037,10 +1037,6 @@ h1 {
   body.is-set-generated .builder {
     position: sticky;
     top: 18px;
-    min-height: calc(100vh - 36px);
-    max-height: calc(100vh - 36px);
-    overflow: auto;
-    overscroll-behavior: contain;
   }
 }
 
