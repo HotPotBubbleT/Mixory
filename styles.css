@@ -1033,6 +1033,17 @@ h1 {
   top: 18px;
 }
 
+@media (min-width: 901px) {
+  body.is-set-generated .builder {
+    position: sticky;
+    top: 18px;
+    min-height: calc(100vh - 36px);
+    max-height: calc(100vh - 36px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 .panel-header {
   display: flex;
   align-items: flex-start;
