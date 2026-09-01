@@ -2136,7 +2136,7 @@ function makeTransitionFriendlySequence(sourcePool, data, energyValues, desiredT
     sequence.push(remaining.splice(index, 1)[0]);
   }
 
-  return sequence;
+  return optimizeLocalFallbackSequence(sequence, data, energyValues);
 }
 
 function findBestStartTrackIndex(tracks, data) {
@@ -2162,48 +2162,89 @@ function findBestStartTrackIndex(tracks, data) {
 }
 
 function findBestNextTrackIndex(previous, candidates, data, targetEnergy, mode = "smoothest", sequence = [], poolContext = []) {
-  const preference = getPreferenceProfile(data);
-  const referencePriority = getReferenceSmoothPriority();
-  const strategy = getSequencingStrategy(data.genre);
   let bestIndex = 0;
   let bestScore = Infinity;
   candidates.forEach((candidate, index) => {
-    const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
-    const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
-    const keyConfidence = previous.metadataEstimated || candidate.metadataEstimated ? 0.48 : 1;
-    const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
-    const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
-    const djAffinity = getDjReferenceAffinity(candidate, data);
-    const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
-    const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
-    const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
-    const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy, poolContext.length);
-    const vocalPenalty = getFallbackVocalSpacingPenalty(sequence, candidate, strategy);
-    const tempoTolerance = Number(strategy.bpmTolerance) || (strategy.stableBpm ? 5 : 8);
-    const tempoDirectionPenalty = strategy.stableBpm && tempoGap > tempoTolerance / 2 ? (tempoGap - tempoTolerance / 2) * 2.3 : 0;
-    const weights = {
-      tempo: (2.35 + referencePriority.tempo * 1.6) * strategy.weights.tempo,
-      key: (1.05 + referencePriority.camelotKey * 2) * strategy.weights.key,
-      energy: (1.05 + referencePriority.energyCurve * 1.4) * strategy.weights.energy,
-      genre: (1.25 + referencePriority.genreTexture * 1.9) * strategy.weights.genre
-    };
-    const score = tempoGap * weights.tempo * preference.tempoWeight
-      + tempoDirectionPenalty
-      + keyGap * weights.key * preference.keyWeight * keyConfidence
-      + energyGap * weights.energy * preference.energyWeight
-      + genrePenalty * weights.genre * preference.genreWeight
-      + referencePatternPenalty * referencePriority.referencePattern
-      + breathingPenalty * Math.max(preference.breathingMomentWeight, strategy.weights.release)
-      + vocalPenalty * strategy.weights.vocalSpacing
-      + artistRepeatPenalty * preference.artistRepeatWeight
-      - djAffinity * preference.djReferenceWeight
-      - mustHaveAffinity * preference.mustHaveWeight;
+    const score = scoreFallbackTransition(previous, candidate, data, targetEnergy, sequence, poolContext);
     if (score < bestScore) {
       bestScore = score;
       bestIndex = index;
     }
   });
   return bestIndex;
+}
+
+function scoreFallbackTransition(previous, candidate, data, targetEnergy, sequence = [], poolContext = []) {
+  const preference = getPreferenceProfile(data);
+  const referencePriority = getReferenceSmoothPriority();
+  const strategy = getSequencingStrategy(data.genre);
+  const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
+  const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
+  const keyConfidence = previous.metadataEstimated || candidate.metadataEstimated ? 0.48 : 1;
+  const energyGap = Math.abs(estimateTrackMixEnergy(candidate, data) - targetEnergy);
+  const genrePenalty = getGenreCompatibilityPenalty(previous.genre, candidate.genre);
+  const djAffinity = getDjReferenceAffinity(candidate, data);
+  const mustHaveAffinity = getMustHaveAffinity(candidate, parseMustHaveTracks(data.mustHave));
+  const artistRepeatPenalty = getArtistRepeatPenalty(sequence, candidate, data, poolContext);
+  const referencePatternPenalty = getReferencePatternPenalty(previous, candidate, data, targetEnergy);
+  const breathingPenalty = getBreathingMomentPenalty(previous, candidate, data, sequence.length, targetEnergy, poolContext.length);
+  const vocalPenalty = getFallbackVocalSpacingPenalty(sequence, candidate, strategy);
+  const autoMixPenalty = getFallbackAutoMixContinuityPenalty(previous, candidate, data, sequence.length, targetEnergy, poolContext.length, strategy);
+  const tempoTolerance = Number(strategy.bpmTolerance) || (strategy.stableBpm ? 5 : 8);
+  const tempoDirectionPenalty = strategy.stableBpm && tempoGap > tempoTolerance / 2 ? (tempoGap - tempoTolerance / 2) * 2.3 : 0;
+  const weights = {
+    tempo: (2.35 + referencePriority.tempo * 1.6) * strategy.weights.tempo,
+    key: (1.05 + referencePriority.camelotKey * 2) * strategy.weights.key,
+    energy: (1.05 + referencePriority.energyCurve * 1.4) * strategy.weights.energy,
+    genre: (1.25 + referencePriority.genreTexture * 1.9) * strategy.weights.genre
+  };
+
+  return tempoGap * weights.tempo * preference.tempoWeight
+    + tempoDirectionPenalty
+    + keyGap * weights.key * preference.keyWeight * keyConfidence
+    + energyGap * weights.energy * preference.energyWeight
+    + genrePenalty * weights.genre * preference.genreWeight
+    + referencePatternPenalty * referencePriority.referencePattern
+    + breathingPenalty * Math.max(preference.breathingMomentWeight, strategy.weights.release)
+    + vocalPenalty * strategy.weights.vocalSpacing
+    + autoMixPenalty
+    + artistRepeatPenalty * preference.artistRepeatWeight
+    - djAffinity * preference.djReferenceWeight
+    - mustHaveAffinity * preference.mustHaveWeight;
+}
+
+function scoreFallbackSequence(sequence = [], data = {}, energyValues = []) {
+  if (!sequence.length) return 0;
+  let score = 0;
+  for (let index = 1; index < sequence.length; index += 1) {
+    score += scoreFallbackTransition(sequence[index - 1], sequence[index], data, energyValues[index] ?? 50, sequence.slice(0, index), sequence);
+  }
+  const strategy = getSequencingStrategy(data.genre);
+  if (strategy.rules?.requireFinalPeak && sequence.slice(Math.floor(sequence.length * 0.68)).every((track) => estimateTrackMixEnergy(track, data) < 78)) score += 12;
+  return score;
+}
+
+function optimizeLocalFallbackSequence(sequence = [], data = {}, energyValues = []) {
+  if (sequence.length < 5) return sequence;
+  let best = [...sequence];
+  let bestScore = scoreFallbackSequence(best, data, energyValues);
+
+  for (let pass = 0; pass < 3; pass += 1) {
+    let improved = false;
+    for (let index = 1; index < best.length - 1; index += 1) {
+      const swapped = [...best];
+      [swapped[index], swapped[index + 1]] = [swapped[index + 1], swapped[index]];
+      const score = scoreFallbackSequence(swapped, data, energyValues);
+      if (score + 0.7 < bestScore) {
+        best = swapped;
+        bestScore = score;
+        improved = true;
+      }
+    }
+    if (!improved) break;
+  }
+
+  return best;
 }
 
 function getDjReferenceAffinity(track, data = {}) {
@@ -2606,6 +2647,32 @@ function getBreathingTextureFit(track = {}, data = {}) {
   if (/mainstage|big room|dubstep|drum and bass|dnb|bass|rave|festival|drop|hard/.test(text)) score -= 0.35;
 
   return Math.max(0, Math.min(1, score));
+}
+
+function getFallbackAutoMixContinuityPenalty(previous = {}, candidate = {}, data = {}, nextIndex = 0, targetEnergy = 50, count = 0, strategy = getSequencingStrategy(data.genre)) {
+  const tempoGap = Math.abs((candidate.tempo || 0) - (previous.tempo || candidate.tempo || 0));
+  const keyGap = getCamelotDistance(previous.camelotKey, candidate.camelotKey);
+  const candidateEnergy = estimateTrackMixEnergy(candidate, data);
+  const previousEnergy = estimateTrackMixEnergy(previous, data);
+  const energyMovement = candidateEnergy - previousEnergy;
+  const familyChange = getGenreFamily(previous.genre || data.genre) !== getGenreFamily(candidate.genre || data.genre);
+  const releaseIndex = getReleaseMomentIndexes(count, data).includes(nextIndex);
+  const keyConfidence = previous.metadataEstimated || candidate.metadataEstimated ? 0.45 : 1;
+  const tolerance = Number(strategy.bpmTolerance) || (strategy.stableBpm ? 5 : 8);
+  let penalty = 0;
+
+  if (tempoGap <= 2 && keyGap <= 1 && !familyChange) penalty -= 3.2;
+  if (tempoGap <= tolerance / 2 && keyGap <= 2) penalty -= 1.4;
+  if (tempoGap > tolerance) penalty += (tempoGap - tolerance) * 2.2;
+  if (tempoGap > tolerance + 6) penalty += 8;
+  if (keyGap > 4) penalty += keyGap * 1.7 * keyConfidence;
+  if (familyChange && tempoGap > 5 && Math.abs(energyMovement) > 14) penalty += 6;
+  if (!releaseIndex && energyMovement < -20) penalty += Math.abs(energyMovement + 20) * 0.7 + 5;
+  if (releaseIndex && energyMovement <= -5 && tempoGap <= tolerance) penalty -= 2.6;
+  if (nextIndex > 1 && nextIndex < count - 2 && candidateEnergy < targetEnergy - 24 && !releaseIndex) penalty += 5;
+  if (candidate.metadataEstimated && previous.metadataEstimated && tempoGap > 6) penalty += 3;
+
+  return penalty;
 }
 
 function getFallbackVocalSpacingPenalty(sequence = [], candidate = {}, strategy = getSequencingStrategy()) {
